@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 
+import "./ShelterNOW.sol";
+
 pragma solidity ^0.8.0;
 
 contract Adoption {
@@ -9,9 +11,10 @@ contract Adoption {
   mapping(uint256 => address) private _petToAdopter;
   mapping(uint256 => AdoptionState) private _petToAdoptionState;
   mapping(uint256 => Pet) private _pets;
-  IERC20 public SNOW;
+  ShelterNOW public SNOW;
 
-  uint256 public _adoptionFee;
+  // 10000 SNOW for adoption
+  uint256 public _adoptionFee = 10 ** 4;
   uint256 public _petCount;
   // REJECTED, CANCELLED, EUTHANISED and REMOVED are not assignable to the _petToAdoptionState, only for event emission.
   // The other enum shows the state of the pet in the adoption procedure.
@@ -20,9 +23,8 @@ contract Adoption {
   constructor (address _SNOWAddress) {
     _owner = msg.sender;
     _petCount = 0;
-    // 0.0000001 Eth
-    _adoptionFee = 10 ** 10;
-    SNOW = IERC20(_SNOWAddress);
+
+    SNOW = ShelterNOW(_SNOWAddress);
     string[4] memory names = ["Lucky", "Luna", "Momo", "Money"];
     for(uint8 i = 0; i < names.length; i++) {
       if(i & 1 == 0) addPet(names[i], AdoptionState.ADOPTABLE);
@@ -124,11 +126,14 @@ contract Adoption {
   }
 
   // Confirm adoption
-  function confirmAdoption(uint256 _petID) public payable petIDIsValid(_petID) petIDIsAvailable(_petID) onlyApprovedNotConfirmedAdopter(_petID) {
-    require(msg.value >= _adoptionFee, "The adoption fee is insufficient!");
+  function confirmAdoption(uint256 _petID, uint256 _amount) public payable petIDIsValid(_petID) petIDIsAvailable(_petID) onlyApprovedNotConfirmedAdopter(_petID) {
+    require(_amount >= _adoptionFee, "The adoption fee is insufficient!");
     address adopter = msg.sender;
 
     _petToAdoptionState[_petID] = AdoptionState.ADOPTED;
+
+    _amount = normaliseSNOW(_amount);
+    SNOW.transferFrom(adopter, _owner, _amount);
 
     emit AdoptionStatus(adopter, _petID, AdoptionState.ADOPTED);
   }
@@ -206,6 +211,10 @@ contract Adoption {
     if(_petToAdopter[_petID] != address(0)) _petToAdopter[_petID] = address(0);
 
     emit AdoptionStatus(_owner, _petID, _reason);
+  }
+
+  function normaliseSNOW(uint256 _amount) public view returns(uint256) {
+    return _amount * (10 ** SNOW.decimals());
   }
 
 }
