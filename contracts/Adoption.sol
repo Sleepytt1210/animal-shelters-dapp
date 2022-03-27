@@ -62,11 +62,17 @@ contract Adoption {
     }
   }
 
+  /**
+  * @dev Ensure a function is only accessible by the contract's owner.
+  */
   modifier onlyOwner {
-    require(msg.sender == _owner, "Only _owner can call this function!");
+    require(msg.sender == _owner, "Only the contract's owner can call this function!");
     _;
   }
 
+  /**
+  * @dev Ensure a pet ID parameter pass to a function is valid.
+  */
   modifier petIDIsValid(uint256 petID) {
     // 4 billion pet id until overload, probably impossible
     require(petID == uint256(uint32(petID)), "Pet ID overloads!");
@@ -74,7 +80,9 @@ contract Adoption {
     _;
   }
 
-  // The pet is adoptable but not yet adopted.
+  /**
+  * @dev Ensure a pet is available for adoption, which excludes `NOTAVAIL` and `ADOPTED`.
+  */
   modifier petIDIsAvailable(uint256 petID) {
     // The pet should be an available one.
     require(_petToAdoptionState[petID] != AdoptionState.NOTAVAIL, "The pet is not available for adoption!");
@@ -83,7 +91,9 @@ contract Adoption {
     _;
   }
 
-  // The application is submitted but not yet approved.
+  /**
+  * @dev Ensure the pet adoption application is submitted but not yet approved.
+  */
   modifier petIDNotReviewed(uint256 petID) {
     // The pet should be in locked state to be approved.
     require(_petToAdoptionState[petID] != AdoptionState.APPROVED, "This pet has already been approved for adoption!");
@@ -91,6 +101,9 @@ contract Adoption {
     _;
   }
 
+  /**
+  * @dev Ensure a pet is approved for adoption but not confirmed to be fully adopted.
+  */
   modifier onlyApprovedNotConfirmedAdopter(uint256 petID) {
     require(_petToAdoptionState[petID] != AdoptionState.ADOPTED, "This pet has already been adopted!");
     // The pet is either adopted or removed if not locked.
@@ -98,6 +111,9 @@ contract Adoption {
     _;
   }
 
+  /**
+  * @dev Ensure the pet ID matches the adopter associated.
+  */
   modifier adopterIsMatch(address adopter, uint256 petID) {
     // Pet should already be requested for adoption.
     require(_petToAdopter[petID] != address(0), "The pet has not been requested for adoption yet.");
