@@ -26,11 +26,20 @@ contract Adoption {
   // Mapping from pet ID to the pet's adoption state.
   mapping(uint256 => AdoptionState) private _petToAdoptionState;
 
+  // Mapping from adopters to their deposit.
+  mapping(address => uint256) private _adopterToDeposit;
+
   // Number of pets added.
   uint256 private _petCount;
 
-  // An adoption fee to be paid upon confirmation, defaults to 10000 SNOW.
-  uint256 private _adoptionFee = 10 ** 4;
+  // An adoption fee to be paid upon confirmation, defaults to 10000 SNOW (without decimals).
+  uint256 private _adoptionFee = _normaliseSNOW(1 * 10 ** 4);
+
+  // A refund fee for a successful adoption, defaults to 5000 SNOW.
+  uint256 private _refundFee = _normaliseSNOW(5 * 10 ** 3);
+
+  // A refund fee for a unsuccessful adoption, defaults to 2000 SNOW.
+  uint256 private _penaltyRefundFee = _normaliseSNOW(2 * 10 ** 3); 
 
   // The contract address to the SNOW.
   ShelterNOW public SNOW;
@@ -151,15 +160,26 @@ contract Adoption {
   }
 
   /**
-  * @dev Request a pet to be adopted. The pet must be in an adoptable status.
+  * @dev Request a pet to be adopted. The pet must be in an adoptable status. 
+  * Besides that a fixed amount of deposit will be collected to prevent abusive request application.
+  *
+  * **NOTE**: The adopter must approve the contract as a spender with an allowance as the `_adoptionFee`,
+  * to perform a successful transaction via ERC-20 standard.
+  * This should be done in the front-end using the SNOW contract directly
+  * because `msg.sender` will be the adoption contract if {SNOW.approve} is called here.
   *
   * @param petID: The pet ID to be adopted.
   */
   function requestAdoption(uint256 petID) public petIDIsValid(petID) petIDIsAvailable(petID) {
     require(_petToAdoptionState[petID] == AdoptionState.ADOPTABLE, "This pet is not available for adoption!");
-    _petToAdopter[petID] = msg.sender;
+    address adopter = msg.sender;
+
+    SNOW.transferFrom(adopter, address(this), _adoptionFee);
+    _adopterToDeposit[adopter] = _adoptionFee;
+
+    _petToAdopter[petID] = adopter;
     _petToAdoptionState[petID] = AdoptionState.LOCKED;
-    emit AdoptionStatus(msg.sender, petID, AdoptionState.LOCKED);
+    emit AdoptionStatus(adopter, petID, AdoptionState.LOCKED);
   }
 
   /**
@@ -227,12 +247,18 @@ contract Adoption {
   /**
   * @dev Reset an adoption application request back to adoptable state.
   * The pet will be set back to `ADOPTABLE` state and this function will emit either `CANCELLED` or `REJECTED` status.
-  * The pet will also be removed from the associated adopter.
+  * The pet will also be removed from the associated adopter. 
+  * The adopter will be refunded a small amount of SNOW as stated in `_penaltyRefundFee`, 
+  * the rest is donated to the animal shelter as a penalty.
   *
   * @param adopter: The adopter who applied for adoption.
   * @param petID: The associated pet ID applied for adoption.
   */
   function resetAdoption(address adopter, uint256 petID, AdoptionState reason) private {
+    SNOW.transfer(adopter, _penaltyRefundFee);
+    SNOW.transfer(_owner, (_adoptionFee - _penaltyRefundFee));
+    _adopterToDeposit[adopter] -= _adoptionFee;
+
     _petToAdoptionState[petID] = AdoptionState.ADOPTABLE;
     _petToAdopter[petID] = address(0);
     emit AdoptionStatus(adopter, petID, reason);
@@ -240,46 +266,43 @@ contract Adoption {
 
   /**
   * @dev Confirm an approved adoption application request. The requires the approveAdoption to be called on the adoption before.
-  * This function will require an amount of adoption fee to be paid to receive the pet.
+  * This function receives optional tip from the adopter upon confirmation.
   * The pet will be set back to `ADOPTED` state and this function will emit a `ADOPTED` status.
-  * If extra amount is paid, a `TipsReceived` event will be emitted as well.
+  * Total amount received by the animal shelter is `_adoptionFee + tipAmount - _refundFee`
+  * 
+  * If a tip is paid, the `TipsReceived` event will be emitted.
   *
-  * **NOTE**: The adopter must approve the contract as a spender with an allowance as the amount paid,
-  * to perform a successful transaction via ERC-20 standard.
-  * This should be done in the front-end using the SNOW contract directly
-  * because `msg.sender` will be the adoption contract if `SNOW.approve()` is called here.
+  * **NOTE**: The {SNOW.approve} function is needed here for payment of the adoption fee (See line 166). 
+  * The allowance should be same as `amount` including tips.
   *
   * @param petID: The pet ID applied for adoption.
-  * @param amount: The amount of adoption fee paid by the adopter.
+  * @param tipAmount: The amount of tip fee to be paid by the adopter.
   */
   function confirmAdoption(
     uint256 petID,
-    uint256 amount
+    uint256 tipAmount
   )
     public
     petIDIsValid(petID)
     petIDIsAvailable(petID)
     onlyApprovedNotConfirmedAdopter(petID)
     adopterIsMatch(msg.sender, petID)
-  {
-    require(amount >= _adoptionFee, "The adoption fee is insufficient!");
+  { 
     address adopter = msg.sender;
 
     _petToAdoptionState[petID] = AdoptionState.ADOPTED;
 
-    uint256 tips = 0;
+    SNOW.transfer(adopter, _refundFee);
+    SNOW.transfer(_owner, _adoptionFee + tipAmount - _refundFee);
+    _adopterToDeposit[adopter] -= _adoptionFee;
 
-    amount = _normaliseSNOW(amount);
-    SNOW.transferFrom(adopter, _owner, amount);
-
-    if(amount > _adoptionFee) {
-      tips += amount - _adoptionFee;
-      emit TipsReceived(adopter, petID, amount);
+    if(tipAmount > 0) {
+      emit TipsReceived(adopter, petID, tipAmount);
     }
     emit AdoptionStatus(adopter, petID, AdoptionState.ADOPTED);
   }
 
-/**
+  /**
   * @dev Withdraw money from the smart contract if any.
   */
   function withdraw() public payable onlyOwner {
@@ -288,37 +311,37 @@ contract Adoption {
   }
 
   /**
-   * @dev Get the address of the contract's owner.
-   *
-   * @return The animal shelter's wallet address.
-   */
+  * @dev Get the address of the contract's owner.
+  *
+  * @return The animal shelter's wallet address.
+  */
   function getOwner() public view returns (address) {
     return _owner;
   }
 
   /**
-   * @dev Get the adoption fee of the animal shelter.
-   *
-   * @return The adoption fee.
-   */
+  * @dev Get the adoption fee of the animal shelter.
+  *
+  * @return The adoption fee.
+  */
   function getAdoptionFee() public view returns (uint256) {
     return _adoptionFee;
   }
 
   /**
-   * @dev Get the number of pets in the animal shelter.
-   *
-   * @return The pet count.
-   */
+  * @dev Get the number of pets in the animal shelter.
+  *
+  * @return The pet count.
+  */
   function getPetCount() public view returns (uint256) {
     return _petCount;
   }
 
   /**
-   * @dev Get the entire pets record in the animal shelter.
-   *
-   * @return The pets record.
-   */
+  * @dev Get the entire pets record in the animal shelter.
+  *
+  * @return The pets record.
+  */
   function getPets() public view returns (Pet[] memory) {
     Pet[] memory result = new Pet[](_petCount);
     for(uint i = 0; i < _petCount; i++) {
@@ -328,10 +351,10 @@ contract Adoption {
   }
 
   /**
-   * @dev Get the pets that are adoptable in the animal shelter.
-   *
-   * @return The adoptable pets record.
-   */
+  * @dev Get the pets that are adoptable in the animal shelter.
+  *
+  * @return The adoptable pets record.
+  */
   function getAdoptablePets() public view returns (Pet[] memory) {
     Pet[] memory holder = new Pet[](_petCount);
     uint256 filterCount = 0;
@@ -351,10 +374,10 @@ contract Adoption {
   }
 
   /**
-   * @dev Get the associated adopter of a pet (can be an empty address).
-   *
-   * @return The address of the adopter.
-   */
+  * @dev Get the associated adopter of a pet (can be an empty address).
+  *
+  * @return The address of the adopter.
+  */
   function getAdopterOfPet(uint256 petID) public view petIDIsValid(petID) returns(address) {
     return _petToAdopter[petID];
   }
@@ -366,6 +389,24 @@ contract Adoption {
   */
   function getAdoptionStateOfPet(uint256 petID) public view petIDIsValid(petID) returns(AdoptionState) {
     return _petToAdoptionState[petID];
+  }
+
+  function getMyAdoption(bool includeAdopting) public view returns(Pet[] memory) {
+    Pet[] memory holder = new Pet[](_petCount);
+    uint256 filterCount = 0;
+    for(uint i = 0; i < _petCount; i++) {
+      if(_petToAdopter[i] == msg.sender && (_petToAdoptionState[i] == AdoptionState.ADOPTED || (includeAdopting && _petToAdoptionState[i] != AdoptionState.NOTAVAIL))) {
+        holder[filterCount] = _pets[i];
+        filterCount++;
+      }
+    }
+
+    Pet[] memory result = new Pet[](filterCount);
+    for(uint i = 0; i < filterCount; i++) {
+      result[i] = holder[i];
+    }
+
+    return result;
   }
 
   /**
