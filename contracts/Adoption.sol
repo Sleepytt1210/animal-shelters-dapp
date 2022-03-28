@@ -8,6 +8,7 @@ pragma solidity ^0.8.0;
 /// @title An adoption contract to facilitate and keep track of adoptions in an animal shelter.
 contract Adoption {
 
+  // A Pet struct that represents a pet, the metadata is stored in the tokenURI variable.
   struct Pet {
     uint256 petID;
     string tokenURI;
@@ -143,9 +144,7 @@ contract Adoption {
       tokenURI: URI_
     });
 
-    if(newStatus == AdoptionState.ADOPTABLE) {
-      _petToAdoptionState[newPetID] = AdoptionState.ADOPTABLE;
-    }
+    _petToAdoptionState[newPetID] = newStatus;
 
     _petCount++;
     return newPetID;
