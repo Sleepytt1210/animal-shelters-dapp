@@ -1,21 +1,19 @@
 // SPDX-License-Identifier: MIT
 
 import "./ShelterNOW.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 pragma solidity ^0.8.0;
 
 /// @author Dylon Wong Chung Yee
 /// @title An adoption contract to facilitate and keep track of adoptions in an animal shelter.
-contract Adoption {
+contract Adoption is Ownable {
 
   // A Pet struct that represents a pet, the metadata is stored in the tokenURI variable.
   struct Pet {
     uint256 petID;
     string tokenURI;
   }
-
-  // An address of the contract's owner.
-  address private _owner;
 
   // Mapping from pet ID to the associated pet struct.
   mapping(uint256 => Pet) private _pets;
@@ -32,14 +30,16 @@ contract Adoption {
   // Number of pets added.
   uint256 private _petCount;
 
-  // An adoption fee to be paid upon confirmation, defaults to 10000 SNOW (without decimals).
-  uint256 private _adoptionFee = _normaliseSNOW(1 * 10 ** 4);
+  // An adoption fee to be paid upon confirmation.
+  uint256 private _adoptionFee;
 
-  // A refund fee for a successful adoption, defaults to 5000 SNOW.
-  uint256 private _refundFee = _normaliseSNOW(5 * 10 ** 3);
+  // A refund fee for a successful adoption.
+  uint256 private _refundFee;
 
-  // A refund fee for a unsuccessful adoption, defaults to 2000 SNOW.
-  uint256 private _penaltyRefundFee = _normaliseSNOW(2 * 10 ** 3); 
+  // A refund fee for a unsuccessful adoption.
+  uint256 private _penaltyRefundFee;
+
+  uint8 private _decimals;
 
   // The contract address to the SNOW.
   ShelterNOW public SNOW;
@@ -57,27 +57,31 @@ contract Adoption {
 
   /**
    * @dev Initializes the contract by setting a token contract address to the adoption contract.
+   * This contract should be excluded from the reflection such that it does not get taxed for refund.
    *
    * @param _SNOWAddress: The address to the SNOW token contract.
    */
   constructor (address _SNOWAddress) {
-    _owner = msg.sender;
     _petCount = 0;
 
     SNOW = ShelterNOW(_SNOWAddress);
+    _decimals = SNOW.decimals();
+
+    /// An adoption fee to be paid upon confirmation, defaults to 10000 SNOW (without decimals) gross amount.
+    /// 4% of the adoption fee will be taxed.
+    _adoptionFee = _normaliseSNOW(1 * 10 ** 4);
+
+    // A refund fee for a successful adoption, defaults to 5000 SNOW gross amount.
+    _refundFee = SNOW.calculateNetAmount(_normaliseSNOW(5 * 10 ** 3));
+
+    // A refund fee for a unsuccessful adoption, defaults to 2000 SNOW gross amount.
+    _penaltyRefundFee =  SNOW.calculateNetAmount(_normaliseSNOW(2 * 10 ** 3));
+
     string[4] memory names = ["Lucky", "Luna", "Momo", "Money"];
     for(uint8 i = 0; i < names.length; i++) {
       if(i & 1 == 0) addPet(names[i], AdoptionState.ADOPTABLE);
       else addPet(names[i], AdoptionState.NOTAVAIL);
     }
-  }
-
-  /**
-  * @dev Ensure a function is only accessible by the contract's owner.
-  */
-  modifier onlyOwner {
-    require(msg.sender == _owner, "Only the contract's owner can call this function!");
-    _;
   }
 
   /**
@@ -174,11 +178,13 @@ contract Adoption {
     require(_petToAdoptionState[petID] == AdoptionState.ADOPTABLE, "This pet is not available for adoption!");
     address adopter = msg.sender;
 
-    SNOW.transferFrom(adopter, address(this), _adoptionFee);
     _adopterToDeposit[adopter] = _adoptionFee;
 
     _petToAdopter[petID] = adopter;
     _petToAdoptionState[petID] = AdoptionState.LOCKED;
+
+    SNOW.transferFrom(adopter, address(this), _adoptionFee);
+    
     emit AdoptionStatus(adopter, petID, AdoptionState.LOCKED);
   }
 
@@ -189,7 +195,7 @@ contract Adoption {
   * This function also requires the `adopter` parameter to match the actual adopter requesting.
   * This function should only be called by the animal shelter.
   *
-  * @param adopter:
+  * @param adopter: The address of the adopter.
   * @param petID: The pet ID to be adopted.
   */
   function approveAdoption(address adopter, uint256 petID)
@@ -255,12 +261,14 @@ contract Adoption {
   * @param petID: The associated pet ID applied for adoption.
   */
   function resetAdoption(address adopter, uint256 petID, AdoptionState reason) private {
-    SNOW.transfer(adopter, _penaltyRefundFee);
-    SNOW.transfer(_owner, (_adoptionFee - _penaltyRefundFee));
-    _adopterToDeposit[adopter] -= _adoptionFee;
-
+    
     _petToAdoptionState[petID] = AdoptionState.ADOPTABLE;
     _petToAdopter[petID] = address(0);
+
+    _adopterToDeposit[adopter] -= _adoptionFee;
+    SNOW.transfer(adopter, _penaltyRefundFee);
+    SNOW.transfer(owner(), (SNOW.calculateNetAmount(_adoptionFee) - _penaltyRefundFee));
+
     emit AdoptionStatus(adopter, petID, reason);
   }
 
@@ -292,9 +300,11 @@ contract Adoption {
 
     _petToAdoptionState[petID] = AdoptionState.ADOPTED;
 
-    SNOW.transfer(adopter, _refundFee);
-    SNOW.transfer(_owner, _adoptionFee + tipAmount - _refundFee);
     _adopterToDeposit[adopter] -= _adoptionFee;
+    
+    SNOW.transfer(adopter, _refundFee);
+    SNOW.transfer(owner(), SNOW.calculateNetAmount(_adoptionFee) + tipAmount - _refundFee);
+    
 
     if(tipAmount > 0) {
       emit TipsReceived(adopter, petID, tipAmount);
@@ -307,16 +317,7 @@ contract Adoption {
   */
   function withdraw() public payable onlyOwner {
     require(address(this).balance > 0, "Nothing to be withdrawn from the smart contract!");
-    payable(_owner).transfer(address(this).balance);
-  }
-
-  /**
-  * @dev Get the address of the contract's owner.
-  *
-  * @return The animal shelter's wallet address.
-  */
-  function getOwner() public view returns (address) {
-    return _owner;
+    payable(owner()).transfer(address(this).balance);
   }
 
   /**
@@ -376,6 +377,8 @@ contract Adoption {
   /**
   * @dev Get the associated adopter of a pet (can be an empty address).
   *
+  * @param petID: The pet ID to be queried.
+  *
   * @return The address of the adopter.
   */
   function getAdopterOfPet(uint256 petID) public view petIDIsValid(petID) returns(address) {
@@ -385,12 +388,21 @@ contract Adoption {
   /**
   * @dev Get the adoption state of a pet (including non available one).
   *
+  * @param petID: The pet ID to be queried.
+  *
   * @return The adoption state.
   */
   function getAdoptionStateOfPet(uint256 petID) public view petIDIsValid(petID) returns(AdoptionState) {
     return _petToAdoptionState[petID];
   }
 
+  /**
+  * @dev Get the adoption record of the function caller.
+  *
+  * @param includeAdopting: To include adoption which has not confirmed yet.
+  *
+  * @return The adoption state.
+  */
   function getMyAdoption(bool includeAdopting) public view returns(Pet[] memory) {
     Pet[] memory holder = new Pet[](_petCount);
     uint256 filterCount = 0;
@@ -410,19 +422,36 @@ contract Adoption {
   }
 
   /**
-   * @dev Set a pet to be adoptable from a not adoptable state. Only owner can call this function.
-   */
+  * @dev Get the amount of deposit locked of an adopter.
+  *
+  * @param adopter: The adopter to query.
+  *
+  * @return The total deposit locked.
+  */
+  function getAdopterDeposit(address adopter) public view returns(uint256) {
+    return _adopterToDeposit[adopter];
+  }
+
+  /**
+  * @dev Set a pet to be adoptable from a not adoptable state. Only owner can call this function.
+  *
+  * @param petID: The pet ID to be queried.
+  *
+  */
   function setPetAdoptable(uint256 petID) public onlyOwner petIDIsValid(petID) {
     require(_petToAdoptionState[petID] != AdoptionState.ADOPTED, "The pet is already adopted!");
     require(_petToAdoptionState[petID] == AdoptionState.NOTAVAIL, "The pet is already adoptable!");
     _petToAdoptionState[petID] = AdoptionState.ADOPTABLE;
-    emit AdoptionStatus(_owner, petID, AdoptionState.ADOPTABLE);
+    emit AdoptionStatus(owner(), petID, AdoptionState.ADOPTABLE);
   }
 
   /**
-   * @dev Set a pet to not available in the adoption option with given reason.
-   * A pet could be just removed from option or maybe euthanised. Only owner can call this function.
-   */
+  * @dev Set a pet to not available in the adoption option with given reason.
+  * A pet could be just removed from option or maybe euthanised. Only owner can call this function.
+  *
+  * @param petID: The pet ID to be queried.
+  * @param reason: Reason of a pet to be removed (i.e. REMOVED or EUTHANISED).
+  */
   function setPetNotAdoptable(uint256 petID, AdoptionState reason) public petIDIsValid(petID) onlyOwner {
     require(_petToAdoptionState[petID] != AdoptionState.NOTAVAIL && _petToAdoptionState[petID] != AdoptionState.ADOPTED, "The pet is already not adoptable!");
     require(reason == AdoptionState.REMOVED || reason == AdoptionState.EUTHANISED, "The state should be a removal state!");
@@ -433,16 +462,18 @@ contract Adoption {
     // Only change state if adopter is set to save gas fee.
     if(_petToAdopter[petID] != address(0)) _petToAdopter[petID] = address(0);
 
-    emit AdoptionStatus(_owner, petID, reason);
+    emit AdoptionStatus(owner(), petID, reason);
   }
 
   /**
-   * @dev Add decimals to the base amount of SNOW.
-   *
-   * @return SNOW with 18 decimals.
-   */
+  * @dev Add decimals to the base amount of SNOW.
+  *
+  * @param amount: Amount of SNOW to be normalised.
+  *
+  * @return SNOW with 9 decimals.
+  */
   function _normaliseSNOW(uint256 amount) internal view returns(uint256) {
-    return amount * (10 ** SNOW.decimals());
+    return amount * (10 ** _decimals);
   }
 
 }
