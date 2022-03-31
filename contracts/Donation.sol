@@ -31,7 +31,12 @@ contract Donation is Ownable {
     }
 
     // Event emission of successful donation.
-    event Donate(address donor, Token tokenType, uint256 amount);
+    event Donate(
+        address donor,
+        Token tokenType,
+        uint256 amount,
+        string message
+    );
 
     // Event emission of successful withdrawal.
     event Withdraw(Token tokenType, uint256 amount);
@@ -48,7 +53,7 @@ contract Donation is Ownable {
     /**
      * @dev Donate to the animal shelter using SNOW token.
      */
-    function donateSNOW(uint256 amount) public {
+    function donateSNOW(uint256 amount, string memory message) public {
         require(amount > 0, "Donation: Donation cannot be zero!");
         address donor = msg.sender;
 
@@ -58,16 +63,17 @@ contract Donation is Ownable {
         _totalDonation[Token.SNOW] += netAmount;
 
         if (_donorIsNew(donor)) donors.push(donor);
+        if (bytes(message).length == 0) message = "None";
 
         _setTopDonors(donor, Token.SNOW);
         SNOW.transferFrom(donor, address(this), amount);
-        emit Donate(donor, Token.SNOW, netAmount);
+        emit Donate(donor, Token.SNOW, netAmount, message);
     }
 
     /**
      * @dev Donate to the animal shelter using Ethereum.
      */
-    function donateETH() public payable {
+    function donateETH(string memory message) public payable {
         uint256 amount = msg.value;
         require(amount > 0, "Donation: Donation cannot be zero!");
         address donor = msg.sender;
@@ -77,9 +83,10 @@ contract Donation is Ownable {
         _totalDonation[Token.ETH] += amount;
 
         if (_donorIsNew(donor)) donors.push(donor);
+        if (bytes(message).length == 0) message = "None";
 
         _setTopDonors(donor, Token.ETH);
-        emit Donate(donor, Token.ETH, amount);
+        emit Donate(donor, Token.ETH, amount, message);
     }
 
     /**

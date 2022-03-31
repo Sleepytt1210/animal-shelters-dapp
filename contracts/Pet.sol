@@ -46,8 +46,8 @@ contract Pet is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
      * @dev Initialises the ERC721 token with name Pet and symbol PET.
      */
     constructor() {
-        _name = "Pet";
-        _symbol = "PET";
+        _name = "Shelter";
+        _symbol = "SHEL";
     }
 
     /**
@@ -117,6 +117,8 @@ contract Pet is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
     /**
      * @dev Get token URI.
      *
+     * @param petID: Pet ID to query.
+     *
      * @return Token URI.
      */
     function tokenURI(uint256 petID)
@@ -168,18 +170,6 @@ contract Pet is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
             "ERC721Enumerable: global index out of bounds"
         );
         return index;
-    }
-
-    /**
-     * @dev Get the token URI of a pet by pet ID.
-     */
-    function tokenURIByPetID(uint256 petID)
-        public
-        view
-        petIDIsValid(petID)
-        returns (string memory)
-    {
-        return _pets[petID];
     }
 
     /**

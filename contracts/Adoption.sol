@@ -86,12 +86,10 @@ contract Adoption is Ownable, Pet {
      *
      * @param URI_: An URI that links to the metadata of the pet.
      * @param newStatus: The status of adoption of the new pet.
-     * @return An ID of the new pet added.
      */
     function addPet(string memory URI_, AdoptionState newStatus)
         public
         onlyOwner
-        returns (uint256)
     {
         require(
             newStatus == AdoptionState.ADOPTABLE ||
@@ -107,7 +105,7 @@ contract Adoption is Ownable, Pet {
 
         _petToAdoptionState[newPetID] = newStatus;
 
-        return newPetID;
+        emit AdoptionStatus(owner(), newPetID, newStatus);
     }
 
     /**
