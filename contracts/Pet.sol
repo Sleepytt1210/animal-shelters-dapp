@@ -3,18 +3,26 @@
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
 pragma solidity ^0.8.0;
 
 /// @author Dylon Wong Chung Yee
 /// @title An adoption contract to facilitate and keep track of adoptions in an animal shelter.
-contract Pet is Context, ERC165, IERC721 {
+contract Pet is Context, ERC165, IERC721, IERC721Metadata, IERC721Enumerable {
     // Mapping from pet ID to the associated token URI.
     mapping(uint256 => string) private _pets;
 
-    // Mapping from pet ID to adopter address
+    // Mapping from pet ID to the owner address
     mapping(uint256 => address) private _owners;
+
+    // Mapping from owner to list of owned token IDs
+    mapping(address => mapping(uint256 => uint256)) private _ownedTokens;
+
+    // Mapping from token ID to index of the owner tokens list
+    mapping(uint256 => uint256) private _ownedTokensIndex;
 
     // Token name
     string private _name;
@@ -35,15 +43,11 @@ contract Pet is Context, ERC165, IERC721 {
     uint256 private _petCount;
 
     /**
-     * @dev Initializes the contract by setting a token contract address to the adoption contract.
-     * This contract should be excluded from the reflection such that it does not get taxed for refund.
-     *
-     * @param name_: The token name.
-     * @param symbol_: The token symbol.
+     * @dev Initialises the ERC721 token with name Pet and symbol PET.
      */
-    constructor(string memory name_, string memory symbol_) {
-        _name = name_;
-        _symbol = symbol_;
+    constructor() {
+        _name = "Pet";
+        _symbol = "PET";
     }
 
     /**
@@ -57,28 +61,6 @@ contract Pet is Context, ERC165, IERC721 {
     }
 
     /**
-     * @dev Get the number of pets in the animal shelter.
-     *
-     * @return The pet count.
-     */
-    function getPetCount() public view returns (uint256) {
-        return _petCount;
-    }
-
-    /**
-     * @dev Get the entire pets record in the animal shelter.
-     *
-     * @return The pets record.
-     */
-    function getPets() public view returns (uint256[] memory) {
-        uint256[] memory result = new uint256[](_petCount);
-        for (uint256 i = 0; i < _petCount; i++) {
-            result[i] = i;
-        }
-        return result;
-    }
-
-    /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId)
@@ -89,6 +71,8 @@ contract Pet is Context, ERC165, IERC721 {
     {
         return
             interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId ||
+            interfaceId == type(IERC721Enumerable).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -117,7 +101,7 @@ contract Pet is Context, ERC165, IERC721 {
      *
      * @return Token name.
      */
-    function name() public view returns (string memory) {
+    function name() public view override returns (string memory) {
         return _name;
     }
 
@@ -126,7 +110,7 @@ contract Pet is Context, ERC165, IERC721 {
      *
      * @return Token symbol.
      */
-    function symbol() public view returns (string memory) {
+    function symbol() public view override returns (string memory) {
         return _symbol;
     }
 
@@ -138,6 +122,7 @@ contract Pet is Context, ERC165, IERC721 {
     function tokenURI(uint256 petID)
         public
         view
+        override
         petIDIsValid(petID)
         returns (string memory)
     {
@@ -145,12 +130,56 @@ contract Pet is Context, ERC165, IERC721 {
     }
 
     /**
-     * @dev Get the number of pets.
+     * @dev Get the total number of pets.
      *
      * @return The pet count.
      */
-    function petCount() public view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _petCount;
+    }
+
+    /**
+     * @dev Get the pet id of an adopter by index.
+     */
+    function tokenOfOwnerByIndex(address owner, uint256 index)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        require(
+            index < balanceOf(owner),
+            "ERC721Enumerable: owner index out of bounds"
+        );
+        return _ownedTokens[owner][index];
+    }
+
+    /**
+     * @dev Get a pet id by pet index (Pet ID is same as index here).
+     */
+    function tokenByIndex(uint256 index)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        require(
+            index < totalSupply(),
+            "ERC721Enumerable: global index out of bounds"
+        );
+        return index;
+    }
+
+    /**
+     * @dev Get the token URI of a pet by pet ID.
+     */
+    function tokenURIByPetID(uint256 petID)
+        public
+        view
+        petIDIsValid(petID)
+        returns (string memory)
+    {
+        return _pets[petID];
     }
 
     /**
@@ -224,7 +253,6 @@ contract Pet is Context, ERC165, IERC721 {
         address to,
         uint256 petID
     ) public override {
-        //solhint-disable-next-line max-line-length
         require(
             _isApprovedOrOwner(_msgSender(), petID),
             "ERC721: transfer caller is not owner nor approved"
@@ -265,8 +293,7 @@ contract Pet is Context, ERC165, IERC721 {
      *
      * Tokens can be managed by their owner or approved accounts via {approve} or {setApprovalForAll}.
      *
-     * Tokens start existing when they are minted (`_mint`),
-     * and stop existing when they are burned (`_burn`).
+     * Tokens start existing when they are minted (`_mint`)
      */
     function _exists(uint256 petID) internal view returns (bool) {
         return _owners[petID] != address(0);
@@ -307,14 +334,25 @@ contract Pet is Context, ERC165, IERC721 {
         require(to != address(0), "ERC721: mint to the zero address");
         require(!_exists(petID), "ERC721: pet already minted");
 
+        _beforeTokenTransfer(address(0), to, petID);
+
         _balances[to] += 1;
         _owners[petID] = to;
-
-        _petCount++;
 
         emit Transfer(address(0), to, petID);
     }
 
+    /**
+     * @dev Transfers `petID` from `from` to `to`.
+     *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
+     *
+     * Requirements:
+     *
+     * - `to` cannot be the zero address.
+     * - `petID` token must be owned by `from`.
+     *
+     * Emits a {Transfer} event.
+     */
     function _transfer(
         address from,
         address to,
@@ -361,7 +399,94 @@ contract Pet is Context, ERC165, IERC721 {
         emit ApprovalForAll(owner, operator, approved);
     }
 
-    function _setTokenURI(uint256 petID, string memory tokenURI_) internal {
+    /**
+     * @dev Update `tokenURI` of `petID`.
+     *
+     * @param petID: The pet ID to be updated.
+     * @param tokenURI_: New token URI.
+     */
+    function _setTokenURI(uint256 petID, string memory tokenURI_)
+        internal
+        petIDIsValid(petID)
+    {
         _pets[petID] = tokenURI_;
+    }
+
+    /**
+     * @dev Hook that is called before any token transfer. This includes minting
+     * and burning.
+     *
+     * Calling conditions:
+     *
+     * - When `from` and `to` are both non-zero, ``from``'s `petID` will be
+     * transferred to `to`.
+     * - When `from` is zero, `petID` will be minted for `to`.
+     * - When `to` is zero, ``from``'s `petID` will be burned.
+     * - `from` cannot be the zero address.
+     * - `to` cannot be the zero address.
+     *
+     * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 petID
+    ) internal {
+        if (from == address(0)) {
+            _addTokenToAllTokensEnumeration();
+        } else if (from != to) {
+            _removeTokenFromOwnerEnumeration(from, petID);
+        }
+        if (to != from) {
+            _addTokenToOwnerEnumeration(to, petID);
+        }
+    }
+
+    /**
+     * @dev Private function to add a token to this extension's ownership-tracking data structures.
+     * @param to address representing the new owner of the given token ID
+     * @param petID uint256 ID of the token to be added to the tokens list of the given address
+     */
+    function _addTokenToOwnerEnumeration(address to, uint256 petID) private {
+        uint256 length = balanceOf(to);
+        _ownedTokens[to][length] = petID;
+        _ownedTokensIndex[petID] = length;
+    }
+
+    /**
+     * @dev Private function to add a token to this extension's token tracking data structures.
+     */
+    function _addTokenToAllTokensEnumeration() private {
+        _petCount++;
+    }
+
+    /**
+     * @dev Private function to remove a token from this extension's ownership-tracking data structures. Note that
+     * while the token is not assigned a new owner, the `_ownedTokensIndex` mapping is _not_ updated: this allows for
+     * gas optimizations e.g. when performing a transfer operation (avoiding double writes).
+     * This has O(1) time complexity, but alters the order of the _ownedTokens array.
+     * @param from address representing the previous owner of the given token ID
+     * @param petID uint256 ID of the token to be removed from the tokens list of the given address
+     */
+    function _removeTokenFromOwnerEnumeration(address from, uint256 petID)
+        private
+    {
+        // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
+        // then delete the last slot (swap and pop).
+
+        uint256 lastTokenIndex = balanceOf(from) - 1;
+        uint256 tokenIndex = _ownedTokensIndex[petID];
+
+        // When the token to delete is the last token, the swap operation is unnecessary
+        if (tokenIndex != lastTokenIndex) {
+            uint256 lastTokenId = _ownedTokens[from][lastTokenIndex];
+
+            _ownedTokens[from][tokenIndex] = lastTokenId; // Move the last token to the slot of the to-delete token
+            _ownedTokensIndex[lastTokenId] = tokenIndex; // Update the moved token's index
+        }
+
+        // This also deletes the contents at the last position of the array
+        delete _ownedTokensIndex[petID];
+        delete _ownedTokens[from][lastTokenIndex];
     }
 }

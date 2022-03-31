@@ -530,22 +530,22 @@ contract ShelterNOW is IERC20, Context, Ownable {
         return (rSupply, tSupply);
     }
 
-    /**
-     * @dev Calculate the gross amount subject to tax from a net amount.
-     * For example, the net amount is 10000 SNOW not subject to 4% tax, then the gross amount is 10416.67 SNOW.
-     * `grossAmount` = `netAmount` * 100 / (100 - `_taxFee`)
-     *
-     * @param netAmount: The net amount to be cauculated.
-     *
-     * @return The gross amount required.
-     */
-    function calculateGrossAmount(uint256 netAmount)
-        public
-        view
-        returns (uint256)
-    {
-        return (netAmount * 100) / (100 - _taxFee);
-    }
+//    /**
+//     * @dev Calculate the gross amount subject to tax from a net amount.
+//     * For example, the net amount is 10000 SNOW not subject to 4% tax, then the gross amount is 10416.67 SNOW.
+//     * `grossAmount` = `netAmount` * 100 / (100 - `_taxFee`)
+//     *
+//     * @param netAmount: The net amount to be cauculated.
+//     *
+//     * @return The gross amount required.
+//     */
+//    function calculateGrossAmount(uint256 netAmount)
+//        public
+//        view
+//        returns (uint256)
+//    {
+//        return (netAmount * 100) / (100 - _taxFee);
+//    }
 
     /**
      * @dev Calculate the net amount from a taxed gross amount.

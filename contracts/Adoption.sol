@@ -9,6 +9,9 @@ pragma solidity ^0.8.0;
 /// @author Dylon Wong Chung Yee
 /// @title An adoption contract to facilitate and keep track of adoptions in an animal shelter.
 contract Adoption is Ownable, Pet {
+    // Mapping from pet ID to temporary adopter.
+    mapping(uint256 => address) private _tempAdopters;
+
     // Mapping from adopters to their deposit.
     mapping(address => uint256) private _adopterToDeposit;
 
@@ -17,6 +20,9 @@ contract Adoption is Ownable, Pet {
 
     // An adoption fee to be paid upon confirmation.
     uint256 private _adoptionFee;
+
+    // An adoption fee to be paid upon confirmation.
+    uint256 private _netAdoptionFee;
 
     // A refund fee for a successful adoption.
     uint256 private _refundFee;
@@ -56,7 +62,7 @@ contract Adoption is Ownable, Pet {
      *
      * @param _SNOWAddress: The address to the SNOW token contract.
      */
-    constructor(address _SNOWAddress) Pet("Pet", "PET") {
+    constructor(address _SNOWAddress) {
         SNOW = ShelterNOW(_SNOWAddress);
         _decimals = SNOW.decimals();
 
@@ -64,77 +70,13 @@ contract Adoption is Ownable, Pet {
         /// 4% of the adoption fee will be taxed.
         _adoptionFee = _normaliseSNOW(1 * 10**4);
 
+        _netAdoptionFee = SNOW.calculateNetAmount(_adoptionFee);
+
         // A refund fee for a successful adoption, defaults to 5000 SNOW gross amount.
         _refundFee = SNOW.calculateNetAmount(_normaliseSNOW(5 * 10**3));
 
         // A refund fee for a unsuccessful adoption, defaults to 2000 SNOW gross amount.
         _penaltyRefundFee = SNOW.calculateNetAmount(_normaliseSNOW(2 * 10**3));
-    }
-
-    /**
-     * @dev Ensure a pet is available for adoption, which excludes `NOTAVAIL` and `ADOPTED`.
-     */
-    modifier petIDIsAvailable(uint256 petID) {
-        // The pet should be an available one.
-        require(
-            _petToAdoptionState[petID] != AdoptionState.NOTAVAIL,
-            "The pet is not available for adoption!"
-        );
-        // The pet should not be already adopted.
-        require(
-            _petToAdoptionState[petID] != AdoptionState.ADOPTED,
-            "This pet has already been adopted!"
-        );
-        _;
-    }
-
-    /**
-     * @dev Ensure the pet adoption application is submitted but not yet approved.
-     */
-    modifier petIDNotReviewed(uint256 petID) {
-        // The pet should be in locked state to be approved.
-        require(
-            _petToAdoptionState[petID] != AdoptionState.APPROVED,
-            "This pet has already been approved for adoption!"
-        );
-        require(
-            _petToAdoptionState[petID] == AdoptionState.LOCKED,
-            "This pet is not requested for adoption yet!"
-        );
-        _;
-    }
-
-    /**
-     * @dev Ensure a pet is approved for adoption but not confirmed to be fully adopted.
-     */
-    modifier onlyApprovedNotConfirmedAdopter(uint256 petID) {
-        require(
-            _petToAdoptionState[petID] != AdoptionState.ADOPTED,
-            "This pet has already been adopted!"
-        );
-        // The pet is either adopted or removed if not locked.
-        require(
-            _petToAdoptionState[petID] == AdoptionState.APPROVED,
-            "This pet is not approved for adoption!"
-        );
-        _;
-    }
-
-    /**
-     * @dev Ensure the pet ID matches the adopter associated.
-     */
-    modifier adopterIsMatch(address adopter, uint256 petID) {
-        // Pet should already be requested for adoption.
-        require(
-            ownerOf(petID) != address(0),
-            "The pet has not been requested for adoption yet."
-        );
-        // The address of adopter must match the adopter who submitted the adoption request.
-        require(
-            adopter == ownerOf(petID),
-            "The pet ID does not match the adopter!"
-        );
-        _;
     }
 
     /**
@@ -157,11 +99,11 @@ contract Adoption is Ownable, Pet {
             "Adoption status must be either adoptable or not available"
         );
 
-        uint256 newPetID = petCount();
+        uint256 newPetID = totalSupply();
         require(newPetID == uint256(uint32(newPetID)), "Pet ID overflow!");
 
         _mint(owner(), newPetID);
-        _setTokenURI(newPetID, URI_);
+        setTokenURI(newPetID, URI_);
 
         _petToAdoptionState[newPetID] = newStatus;
 
@@ -179,21 +121,18 @@ contract Adoption is Ownable, Pet {
      *
      * @param petID: The pet ID to be adopted.
      */
-    function requestAdoption(uint256 petID)
-        public
-        petIDIsValid(petID)
-        petIDIsAvailable(petID)
-    {
+    function requestAdoption(uint256 petID) public petIDIsValid(petID) {
         require(
             _petToAdoptionState[petID] == AdoptionState.ADOPTABLE,
-            "This pet is not available for adoption!"
+            "Not available for adoption!"
         );
+
         address adopter = msg.sender;
 
-        _adopterToDeposit[adopter] = _adoptionFee;
+        _adopterToDeposit[adopter] += _netAdoptionFee;
         _petToAdoptionState[petID] = AdoptionState.LOCKED;
 
-        safeTransferFrom(owner(), adopter, petID);
+        _tempAdopters[petID] = adopter;
 
         SNOW.transferFrom(adopter, address(this), _adoptionFee);
 
@@ -214,10 +153,14 @@ contract Adoption is Ownable, Pet {
         public
         onlyOwner
         petIDIsValid(petID)
-        petIDIsAvailable(petID)
-        petIDNotReviewed(petID)
-        adopterIsMatch(adopter, petID)
     {
+        require(
+            _petToAdoptionState[petID] == AdoptionState.LOCKED,
+            "Not requested for adoption yet!"
+        );
+
+        require(_adopterMatches(adopter, petID), "Pet does not match adopter!");
+
         _petToAdoptionState[petID] = AdoptionState.APPROVED;
         emit AdoptionStatus(adopter, petID, AdoptionState.APPROVED);
     }
@@ -231,14 +174,14 @@ contract Adoption is Ownable, Pet {
      * @param adopter: The adopter who applied for adoption.
      * @param petID: The associated pet ID applied for adoption.
      */
-    function rejectAdoption(address adopter, uint256 petID)
-        public
-        onlyOwner
-        petIDIsValid(petID)
-        petIDIsAvailable(petID)
-        petIDNotReviewed(petID)
-        adopterIsMatch(adopter, petID)
-    {
+    function rejectAdoption(address adopter, uint256 petID) public onlyOwner {
+        require(
+            _petToAdoptionState[petID] == AdoptionState.LOCKED,
+            "Not requested for adoption yet!"
+        );
+
+        require(_adopterMatches(adopter, petID), "Pet does not match adopter!");
+
         _resetAdoption(
             adopter,
             petID,
@@ -254,13 +197,18 @@ contract Adoption is Ownable, Pet {
      *
      * @param petID: The pet adoption to be cancelled.
      */
-    function cancelAdoption(uint256 petID)
-        public
-        petIDIsValid(petID)
-        petIDIsAvailable(petID)
-        onlyApprovedNotConfirmedAdopter(petID)
-        adopterIsMatch(msg.sender, petID)
-    {
+    function cancelAdoption(uint256 petID) public petIDIsValid(petID) {
+        // The pet must be approved.
+        require(
+            _petToAdoptionState[petID] == AdoptionState.APPROVED,
+            "This pet is not approved for adoption!"
+        );
+
+        require(
+            _adopterMatches(msg.sender, petID),
+            "Pet does not match adopter!"
+        );
+
         _resetAdoption(
             msg.sender,
             petID,
@@ -277,7 +225,7 @@ contract Adoption is Ownable, Pet {
      *
      * If a tip is paid, the `TipsReceived` event will be emitted.
      *
-     * **NOTE**: The {SNOW.approve} function is needed here for payment of the adoption fee (See line 166).
+     * NOTE: The {SNOW.approve} function is needed here for payment of the adoption fee (See line 166).
      * The allowance should be same as `amount` including tips.
      *
      * @param petID: The pet ID applied for adoption.
@@ -286,23 +234,24 @@ contract Adoption is Ownable, Pet {
     function confirmAdoption(uint256 petID, uint256 tipAmount)
         public
         petIDIsValid(petID)
-        petIDIsAvailable(petID)
-        onlyApprovedNotConfirmedAdopter(petID)
-        adopterIsMatch(msg.sender, petID)
     {
+        // The pet must be approved.
+        require(
+            _petToAdoptionState[petID] == AdoptionState.APPROVED,
+            "Not approved for adoption!"
+        );
+
         address adopter = msg.sender;
 
-        _petToAdoptionState[petID] = AdoptionState.ADOPTED;
+        require(_adopterMatches(adopter, petID), "Pet does not match adopter!");
 
-        _adopterToDeposit[adopter] -= _adoptionFee;
+        _petToAdoptionState[petID] = AdoptionState.ADOPTED;
+        _adopterToDeposit[adopter] -= _netAdoptionFee;
 
         safeTransferFrom(owner(), adopter, petID);
 
         SNOW.transfer(adopter, _refundFee);
-        SNOW.transfer(
-            owner(),
-            SNOW.calculateNetAmount(_adoptionFee) + tipAmount - _refundFee
-        );
+        SNOW.transfer(owner(), _netAdoptionFee + tipAmount - _refundFee);
 
         if (tipAmount > 0) {
             emit TipsReceived(adopter, petID, tipAmount);
@@ -331,30 +280,6 @@ contract Adoption is Ownable, Pet {
     }
 
     /**
-     * @dev Get the pets that are adoptable in the animal shelter.
-     *
-     * @return The array of adoptable pets' ID.
-     */
-    function getAdoptablePets() public view returns (uint256[] memory) {
-        uint256 petCount_ = petCount();
-        uint256[] memory holder = new uint256[](petCount_);
-        uint256 filterCount;
-        for (uint256 i = 0; i < petCount_; i++) {
-            if (_petToAdoptionState[i] == AdoptionState.ADOPTABLE) {
-                holder[filterCount] = i;
-                filterCount++;
-            }
-        }
-
-        uint256[] memory result = new uint256[](filterCount);
-        for (uint256 i = 0; i < filterCount; i++) {
-            result[i] = holder[i];
-        }
-
-        return result;
-    }
-
-    /**
      * @dev Get the adoption state of a pet (including non available one).
      *
      * @param petID: The pet ID to be queried.
@@ -369,30 +294,6 @@ contract Adoption is Ownable, Pet {
     {
         return _petToAdoptionState[petID];
     }
-
-    // /**
-    // * @dev Get the adoption record of the function caller.
-    // *
-    // * @param includeAdopting: To include adoption which has not confirmed yet.
-    // *
-    // * @return An array of pet ID.
-    // */
-    // function getMyAdoption(bool includeAdopting) public view returns(uint256[] memory) {
-    //   uint256[] memory holder = new uint25petCount() //   uint256 filterCount = 0;
-    //   for(uint i = 0; petCount()+) {
-    //     if(ownerOf(i) == msg.sender || (includeAdopting && _owners[i] == msg.sender)) {
-    //       holder[filterCount] = i;
-    //       filterCount++;
-    //     }
-    //   }
-
-    //   uint256[] memory result = new uint256[](filterCount);
-    //   for(uint i = 0; i < filterCount; i++) {
-    //     result[i] = holder[i];
-    //   }
-
-    //   return result;
-    // }
 
     /**
      * @dev Get the amount of deposit locked of an adopter.
@@ -429,6 +330,24 @@ contract Adoption is Ownable, Pet {
     }
 
     /**
+     * @dev Set the token URI of a pet.
+     *
+     * @param petID: Pet ID to be modified.
+     * @param tokenURI_: Token URI to be set.
+     */
+    function setTokenURI(uint256 petID, string memory tokenURI_)
+        public
+        petIDIsValid(petID)
+        onlyOwner
+    {
+        require(
+            _petToAdoptionState[petID] != AdoptionState.ADOPTED ||
+                _petToAdoptionState[petID] != AdoptionState.EUTHANISED
+        );
+        _setTokenURI(petID, tokenURI_);
+    }
+
+    /**
      * @dev Add decimals to the base amount of SNOW.
      *
      * @param amount: Amount of SNOW to be normalised.
@@ -437,6 +356,25 @@ contract Adoption is Ownable, Pet {
      */
     function _normaliseSNOW(uint256 amount) internal view returns (uint256) {
         return amount * (10**_decimals);
+    }
+
+    /**
+     * @dev Check if given adopter matches the pet ID.
+     *
+     * @param adopter: The adopter's address.
+     * @param petID: The pet ID adopted.
+     *
+     * @return Match or not.
+     */
+    function _adopterMatches(address adopter, uint256 petID)
+        internal
+        view
+        petIDIsValid(petID)
+        returns (bool)
+    {
+        // Pet should exists.
+        require(_tempAdopters[petID] != address(0), "Pet does not exist.");
+        return _tempAdopters[petID] == adopter;
     }
 
     /**
@@ -471,23 +409,19 @@ contract Adoption is Ownable, Pet {
 
         address owner_ = owner();
 
-        _adopterToDeposit[adopter] -= _adoptionFee;
+        _tempAdopters[petID] = owner_;
+        _adopterToDeposit[adopter] -= _netAdoptionFee;
         _petToAdoptionState[petID] = status;
         if (
             reason == AdoptionState.CANCELLED ||
             reason == AdoptionState.REJECTED
         ) {
             SNOW.transfer(adopter, _penaltyRefundFee);
-            SNOW.transfer(
-                owner_,
-                (SNOW.calculateNetAmount(_adoptionFee) - _penaltyRefundFee)
-            );
+            SNOW.transfer(owner_, (_netAdoptionFee - _penaltyRefundFee));
         } else {
             if (adopter != owner_)
                 SNOW.transfer(adopter, SNOW.calculateNetAmount(_adoptionFee));
         }
-
-        safeTransferFrom(adopter, owner_, petID);
 
         emit AdoptionStatus(adopter, petID, reason);
     }
