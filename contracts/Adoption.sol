@@ -159,6 +159,8 @@ contract Adoption is Ownable, Pet {
 
         require(_adopterMatches(adopter, petID), "Pet does not match adopter!");
 
+        approve(adopter, petID);
+
         _petToAdoptionState[petID] = AdoptionState.APPROVED;
         emit AdoptionStatus(adopter, petID, AdoptionState.APPROVED);
     }
@@ -284,7 +286,7 @@ contract Adoption is Ownable, Pet {
      *
      * @return The adoption state.
      */
-    function getAdoptionStateOfPet(uint256 petID)
+    function getAdoptionState(uint256 petID)
         public
         view
         petIDIsValid(petID)
@@ -371,8 +373,11 @@ contract Adoption is Ownable, Pet {
         returns (bool)
     {
         // Pet should exists.
-        require(_tempAdopters[petID] != address(0), "Pet does not exist.");
-        return _tempAdopters[petID] == adopter;
+        require(
+            _tempAdopters[petID] != address(0) || ownerOf(petID) != address(0),
+            "Pet does not exist."
+        );
+        return _tempAdopters[petID] == adopter || ownerOf(petID) == adopter;
     }
 
     /**
