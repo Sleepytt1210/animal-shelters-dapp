@@ -57,17 +57,16 @@ contract Donation is Ownable {
         require(amount > 0, "Donation: Donation cannot be zero!");
         address donor = msg.sender;
 
-        uint256 netAmount = SNOW.calculateNetAmount(amount);
-        _uncollectedDonation[Token.SNOW] += netAmount;
-        _donorToDonation[donor][Token.SNOW] += netAmount;
-        _totalDonation[Token.SNOW] += netAmount;
+        _uncollectedDonation[Token.SNOW] += amount;
+        _donorToDonation[donor][Token.SNOW] += amount;
+        _totalDonation[Token.SNOW] += amount;
 
         if (_donorIsNew(donor)) donors.push(donor);
         if (bytes(message).length == 0) message = "None";
 
         _setTopDonors(donor, Token.SNOW);
         SNOW.transferFrom(donor, address(this), amount);
-        emit Donate(donor, Token.SNOW, netAmount, message);
+        emit Donate(donor, Token.SNOW, amount, message);
     }
 
     /**

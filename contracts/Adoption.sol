@@ -21,12 +21,6 @@ contract Adoption is Ownable, Pet {
     // An adoption fee to be paid upon confirmation.
     uint256 private _adoptionFee;
 
-    // An adoption fee to be paid upon confirmation.
-    uint256 private _netAdoptionFee;
-
-    // A refund fee for a successful adoption.
-    uint256 private _refundFee;
-
     // A refund fee for a unsuccessful adoption.
     uint256 private _penaltyRefundFee;
 
@@ -60,23 +54,17 @@ contract Adoption is Ownable, Pet {
      * @dev Initializes the contract by setting a token contract address to the adoption contract.
      * This contract should be excluded from the reflection such that it does not get taxed for refund.
      *
-     * @param _SNOWAddress: The address to the SNOW token contract.
      */
-    constructor(address _SNOWAddress) {
-        SNOW = ShelterNOW(_SNOWAddress);
+    constructor(address snowAdd) {
+        SNOW = ShelterNOW(snowAdd);
         _decimals = SNOW.decimals();
 
         /// An adoption fee to be paid upon confirmation, defaults to 10000 SNOW (without decimals) gross amount.
         /// 4% of the adoption fee will be taxed.
         _adoptionFee = _normaliseSNOW(1 * 10**4);
 
-        _netAdoptionFee = SNOW.calculateNetAmount(_adoptionFee);
-
-        // A refund fee for a successful adoption, defaults to 5000 SNOW gross amount.
-        _refundFee = SNOW.calculateNetAmount(_normaliseSNOW(5 * 10**3));
-
         // A refund fee for a unsuccessful adoption, defaults to 2000 SNOW gross amount.
-        _penaltyRefundFee = SNOW.calculateNetAmount(_normaliseSNOW(2 * 10**3));
+        _penaltyRefundFee = _normaliseSNOW(2 * 10**3);
     }
 
     /**
@@ -103,9 +91,11 @@ contract Adoption is Ownable, Pet {
         _mint(owner(), newPetID);
         setTokenURI(newPetID, URI_);
 
-        _petToAdoptionState[newPetID] = newStatus;
+        if (newStatus == AdoptionState.ADOPTABLE)
+            _petToAdoptionState[newPetID] = newStatus;
+        _tempAdopters[newPetID] = msg.sender;
 
-        emit AdoptionStatus(owner(), newPetID, newStatus);
+        emit AdoptionStatus(msg.sender, newPetID, newStatus);
     }
 
     /**
@@ -122,12 +112,12 @@ contract Adoption is Ownable, Pet {
     function requestAdoption(uint256 petID) public petIDIsValid(petID) {
         require(
             _petToAdoptionState[petID] == AdoptionState.ADOPTABLE,
-            "Not available for adoption!"
+            "Request: Not available for adoption!"
         );
 
         address adopter = msg.sender;
 
-        _adopterToDeposit[adopter] += _netAdoptionFee;
+        _adopterToDeposit[adopter] += _adoptionFee;
         _petToAdoptionState[petID] = AdoptionState.LOCKED;
 
         _tempAdopters[petID] = adopter;
@@ -246,12 +236,11 @@ contract Adoption is Ownable, Pet {
         require(_adopterMatches(adopter, petID), "Pet does not match adopter!");
 
         _petToAdoptionState[petID] = AdoptionState.ADOPTED;
-        _adopterToDeposit[adopter] -= _netAdoptionFee;
+        _adopterToDeposit[adopter] -= _adoptionFee;
 
         safeTransferFrom(owner(), adopter, petID);
 
-        SNOW.transfer(adopter, _refundFee);
-        SNOW.transfer(owner(), _netAdoptionFee + tipAmount - _refundFee);
+        SNOW.transfer(adopter, _adoptionFee);
 
         if (tipAmount > 0) {
             emit TipsReceived(adopter, petID, tipAmount);
@@ -413,17 +402,16 @@ contract Adoption is Ownable, Pet {
         address owner_ = owner();
 
         _tempAdopters[petID] = owner_;
-        _adopterToDeposit[adopter] -= _netAdoptionFee;
+        _adopterToDeposit[adopter] -= _adoptionFee;
         _petToAdoptionState[petID] = status;
         if (
             reason == AdoptionState.CANCELLED ||
             reason == AdoptionState.REJECTED
         ) {
             SNOW.transfer(adopter, _penaltyRefundFee);
-            SNOW.transfer(owner_, (_netAdoptionFee - _penaltyRefundFee));
+            SNOW.transfer(owner_, (_adoptionFee - _penaltyRefundFee));
         } else {
-            if (adopter != owner_)
-                SNOW.transfer(adopter, SNOW.calculateNetAmount(_adoptionFee));
+            if (adopter != owner_) SNOW.transfer(adopter, _adoptionFee);
         }
 
         emit AdoptionStatus(adopter, petID, reason);
