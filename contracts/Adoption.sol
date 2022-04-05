@@ -404,12 +404,12 @@ contract Adoption is Ownable, Pet {
         _tempAdopters[petID] = owner_;
         _adopterToDeposit[adopter] -= _adoptionFee;
         _petToAdoptionState[petID] = status;
-        if (
-            reason == AdoptionState.CANCELLED ||
-            reason == AdoptionState.REJECTED
-        ) {
+        if (reason == AdoptionState.CANCELLED) {
             SNOW.transfer(adopter, _penaltyRefundFee);
             SNOW.transfer(owner_, (_adoptionFee - _penaltyRefundFee));
+        } else if (reason == AdoptionState.REJECTED) {
+            SNOW.transfer(adopter, _adoptionFee / 2);
+            SNOW.transfer(owner_, (_adoptionFee / 2));
         } else {
             if (adopter != owner_) SNOW.transfer(adopter, _adoptionFee);
         }
