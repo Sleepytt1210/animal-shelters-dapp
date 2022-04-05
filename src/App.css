@@ -1,0 +1,77 @@
+@font-face {
+  font-family: 'Fredoka One';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://fonts.gstatic.com/s/fredokaone/v12/k3kUo8kEI-tA1RRcTZGmTlHGCac.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+h1, p, .home-btn, .logo-text, .auth-text{
+  font-family: "Fredoka One";
+}
+
+.App {
+  text-align: center;
+}
+
+.logo {
+  color: #fff;
+  align-items: center;
+  display: flex;
+}
+
+.logo-text {
+  width: max-content;
+  font-weight: 400;
+  font-size: 20px;
+}
+
+.content-row {
+  margin: 10px 0 5px;
+  width: 100%;
+}
+
+.adoption-row {
+  margin: 50px auto;
+  padding: 20px 2px 30px;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  background-color: #ECDFC9;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .logo {
+    animation: App-logo-scale 1s linear;
+  }
+}
+
+.header {
+  position: fixed;
+  z-index: 1;
+  width: 100%;
+  background: #141414;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+  padding: 0 10px;
+  box-shadow: 0 1px 10px rgb(151 164 175 / 10%);
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+[data-theme="dark"] .site-layout-content {
+  background: #141414;
+}
+
+@keyframes App-logo-scale {
+  from {
+    transform: scale(1.5, 1.5);
+  }
+  to {
+    transform: scale(1, 1);
+  }
+}
