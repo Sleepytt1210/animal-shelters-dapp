@@ -1,4 +1,4 @@
-import { Divider, Typography, Row, Col, Button, Space, List, Card } from "antd";
+import { Divider, Typography, Row, Col, Button, Space } from "antd";
 import React from "react";
 import IntroImg from "./img/home-img.jpg";
 import { DollarTwoTone, HeartTwoTone } from "@ant-design/icons";
@@ -6,7 +6,6 @@ import { sampleData } from "../../utils/util";
 import PetList from "../PetLists";
 
 const { Title, Paragraph, Text } = Typography;
-const { Meta } = Card;
 const styles = {
   title: {
     fontSize: "20px",
@@ -28,7 +27,11 @@ const styles = {
 export default function Home() {
   return (
     <>
-      <Row gutter={[20, 20]} className="content-row">
+      <Row
+        gutter={[20, 20]}
+        className="content-row"
+        style={{ margin: "unset", paddingTop: "20px" }}
+      >
         <Col span={24}>
           <Row
             gutter={[20, 20]}
@@ -90,10 +93,9 @@ export default function Home() {
               href="/donation"
               className="home-btn"
               style={{
-                background: "pink",
-                outline: "1.5px solid red",
-                borderColor: "red",
-                color: "#000",
+                background: "#ff32ad",
+                border: "1px solid #ff32ad",
+                color: "#fff",
                 textShadow: "1px 1px 2px rgb(0 0 0 / 30%);",
                 boxShadow: "0 3px 5px rgb(12 12 12 / 30%);",
               }}
@@ -113,20 +115,19 @@ export default function Home() {
           <PetList dataSource={sampleData} />
           <Button
             size="Large"
-            href="/findpet"
-            block
             className="home-btn"
             style={{
-              background: "#7D462F",
-              borderColor: "#7D462F",
+              background: "#FAC54B",
+              border: "3px solid #7D462F",
+              borderRadius: "15px",
               color: "#fff",
               textShadow: "1px 1px 2px rgb(0 0 0 / 30%);",
               boxShadow: "0 3px 5px rgb(12 12 12 / 30%);",
-              fontSize: "20px",
-              padding: "10px",
+              fontSize: "30px",
+              height: "auto",
             }}
           >
-            Find More
+            <a href="/findpet">Find More</a>
           </Button>
         </Space>
       </Row>

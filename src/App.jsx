@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-import "./App.css";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,21 +7,24 @@ import {
 } from "react-router-dom";
 import MenuItems from "./components/MenuItems";
 import Home from "./components/Home/Home.jsx";
-import NativeBalance from "./components/NativeBalance";
+// import NativeBalance from "./components/NativeBalance";
 import Account from "./components/Account/Account";
-import { Layout, Tabs } from "antd";
+import { Layout } from "antd";
 import Text from "antd/lib/typography/Text";
 import "antd/dist/antd.css";
 import PetFinder from "./components/PetFinder/PetFinder";
+import PetDetails from "./components/Adoption/PetDetails";
+import Donation from "./components/Donation";
+import "./App.css";
 const { Header, Content, Footer } = Layout;
 
 const styles = {
   content: {
-    display: "flex",
+    display: "block",
     justifyContent: "center",
     fontFamily: "Roboto, sans-serif",
     color: "#041836",
-    marginTop: "100px",
+    marginTop: "64px",
     padding: "10px 0",
     minHeight: "250px",
     alignContent: "center",
@@ -38,7 +40,7 @@ const styles = {
   },
 };
 
-const App = ({ isServerInfo }) => {
+const App = () => {
   return (
     <Layout className="layout">
       <Router>
@@ -54,23 +56,9 @@ const App = ({ isServerInfo }) => {
           <Routes>
             <Route path="/home" element={<Home />} />
             <Route path="/findpet" element={<PetFinder />} />
-            {/*  <Route path="/1inch">
-                <Tabs defaultActiveKey="1" style={{ alignItems: "center" }}>
-                  <Tabs.TabPane tab={<span>Ethereum</span>} key="1">
-                    <DEX chain="eth" />
-                  </Tabs.TabPane>
-                  <Tabs.TabPane tab={<span>Binance Smart Chain</span>} key="2">
-                    <DEX chain="bsc" />
-                  </Tabs.TabPane>
-                  <Tabs.TabPane tab={<span>Polygon</span>} key="3">
-                    <DEX chain="polygon" />
-                  </Tabs.TabPane>
-                </Tabs>
-              </Route>
-              <Route path="/erc20balance">
-                <ERC20Balance />
-              </Route>
-              <Route path="/onramp">
+            <Route path="/adoptpet/:petID" element={<PetDetails />} />
+            <Route path="/donation" element={<Donation />} />
+            {/*  <Route path="/onramp">
                 <Ramper />
               </Route>
               <Route path="/erc20transfers">
