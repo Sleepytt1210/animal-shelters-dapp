@@ -25,11 +25,11 @@ function MenuItems() {
       <Menu.Item key="/findpet">
         <NavLink to="/findpet">Pet Finder</NavLink>
       </Menu.Item>
-      <Menu.Item key="/adoption">
-        <NavLink to="/adoption">Adoption</NavLink>
-      </Menu.Item>
       <Menu.Item key="/donation">
         <NavLink to="/donation">Donation</NavLink>
+      </Menu.Item>
+      <Menu.Item key="/statistics">
+        <NavLink to="/statistics">Statistics</NavLink>
       </Menu.Item>
       <Menu.Item key="/dex">
         <NavLink to="/dex">DEX</NavLink>
