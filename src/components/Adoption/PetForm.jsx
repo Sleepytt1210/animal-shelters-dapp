@@ -27,7 +27,6 @@ import {
   typeOptions,
   genderOptions,
   sizeOptions,
-  ageRangeOptions,
   maxDescLength,
   maxDogAge,
   maxWidth,
@@ -50,23 +49,19 @@ const formItemLayout = {
 export default function PetForm({ data }) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [type, setType] = useState("Dog");
   const [visible, setVisible] = useState(false);
   const breeds = generateBreedFromData(data);
   const [newBreed, setNewbreed] = useState("");
   const [breedList, setBreedList] = useState(breeds);
-  const [breedOptions, setBreedOptions] = useState(
-    breedOptionGen({ breeds: breedList[type] })
-  );
+  const [breedOptions, setBreedOptions] = useState();
 
   const onFinish = (values) => {
     console.log("Received values of form: ", values);
   };
 
-  const onTypeChange = (e) => {
-    const type_ = e.target.value;
-    setType(type_);
-    setBreedOptions(breedOptionGen({ breeds: breedList[type_] }));
+  const onTypeChange = () => {
+    const type = form.getFieldValue("type");
+    setBreedOptions(breedOptionGen({ breeds: breedList[type] }));
   };
 
   const onBreedChange = (e) => {
@@ -80,6 +75,7 @@ export default function PetForm({ data }) {
 
   const addItem = (e) => {
     e.preventDefault();
+    const type = form.getFieldsValue("type");
     if (newBreed.length > 0) {
       var prevState = { ...breedList };
       prevState[type] = [...prevState[type], newBreed];
@@ -152,7 +148,6 @@ export default function PetForm({ data }) {
       <Form
         form={form}
         name="create_new"
-        initialValues={{ type: "Dog" }}
         {...formItemLayout}
         onFinish={onFinish}
       >
@@ -239,31 +234,32 @@ export default function PetForm({ data }) {
         <Form.Item name="breed" label="Breed" required>
           <Select
             showSearch
-            placeholder="Choose a breed"
+            disabled={!form.getFieldValue("type")}
+            placeholder={
+              form.getFieldValue("type")
+                ? "Choose a breed"
+                : "Select a type first!"
+            }
             filterOption={(input, option) =>
               option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
             }
             dropdownRender={(menu) => (
               <>
                 {menu}
-                {type && (
-                  <>
-                    <Divider style={{ margin: "8px 0" }} />
-                    <Space align="center" style={{ padding: "0 8px 4px" }}>
-                      <Input
-                        placeholder="Please enter item"
-                        value={newBreed}
-                        onChange={onBreedChange}
-                      />
-                      <Typography.Link
-                        onClick={addItem}
-                        style={{ whiteSpace: "nowrap" }}
-                      >
-                        <PlusOutlined /> Add item
-                      </Typography.Link>
-                    </Space>
-                  </>
-                )}
+                <Divider style={{ margin: "8px 0" }} />
+                <Space align="center" style={{ padding: "0 8px 4px" }}>
+                  <Input
+                    placeholder="Please enter item"
+                    value={newBreed}
+                    onChange={onBreedChange}
+                  />
+                  <Typography.Link
+                    onClick={addItem}
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    <PlusOutlined /> Add item
+                  </Typography.Link>
+                </Space>
               </>
             )}
           >
