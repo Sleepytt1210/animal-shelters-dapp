@@ -11,12 +11,14 @@ import {
   Space,
 } from "antd";
 import React, { useState } from "react";
-import PlaceHolder from "../../utils/placeholder.png";
+import { maxWidth } from "../../utils/util";
+import PlaceHolder from "../../utils/placeholder.jpg";
 import Icon, {
   FormOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  CarryOutOutlined,
+  CheckSquareFilled,
+  CloseSquareFilled,
   DollarCircleOutlined,
 } from "@ant-design/icons";
 
@@ -25,10 +27,10 @@ const { Title, Paragraph, Text } = Typography;
 var placeHolder = {
   petID: -1,
   name: "Enter Pet's Name",
+  vaccinated: false,
   img: (
     <Image
-      width={200}
-      height={200}
+      width={maxWidth}
       src={PlaceHolder}
       fallback={PlaceHolder}
       className={"pet-img"}
@@ -41,6 +43,7 @@ var placeHolder = {
   characteristic:
     "Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...",
   suggestion: "Enter suggestion...\nEnter suggestion...\nEnter suggestion...",
+  adoptable: false,
 };
 
 const CatAdopted = () => {
@@ -82,13 +85,23 @@ const CatAdopted = () => {
   );
 };
 
+const displayAge = (age) => {
+  if (age < 12) {
+    return `${age} months old`;
+  }
+  return `${Math.floor(age / 12)} years old`;
+};
+
+const definedProps = (obj) => {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([k, v]) => v !== undefined)
+  );
+};
+
 const CatIcon = (props) => <Icon component={CatAdopted} {...props} />;
 
 export default function PetTemplate({ petMetadata }) {
-  if (petMetadata) placeHolder = { ...placeHolder, ...petMetadata };
-  console.log(placeHolder);
-  const [adoptable, setAdoptable] = useState(true);
-  const [lengthLimitedStr, setLengthLimitedStr] = useState();
+  placeHolder = { ...placeHolder, ...definedProps(petMetadata) };
   return (
     <>
       <Row gutter={30} className="spaced-container">
@@ -108,7 +121,7 @@ export default function PetTemplate({ petMetadata }) {
               }
               style={{ fontSize: "30px", fontFamily: "Fredoka One" }}
               extra={
-                adoptable ? (
+                placeHolder.adoptable ? (
                   <Button
                     style={{
                       background: "#0cc72b",
@@ -117,14 +130,12 @@ export default function PetTemplate({ petMetadata }) {
                       color: "#fff",
                       fontFamily: "Nunito",
                     }}
-                    onClick={() => setAdoptable(!adoptable)}
                     shape="round"
                   >
                     Available
                   </Button>
                 ) : (
                   <Button
-                    disabled
                     style={{
                       background: "red",
                       border: "0",
@@ -132,7 +143,6 @@ export default function PetTemplate({ petMetadata }) {
                       fontWeight: "600",
                       fontFamily: "Nunito",
                     }}
-                    onClick={() => setAdoptable(!adoptable)}
                     shape="round"
                   >
                     Not Available
@@ -144,7 +154,7 @@ export default function PetTemplate({ petMetadata }) {
                 {placeHolder.name}
               </Descriptions.Item>
               <Descriptions.Item label="Age" className="pet-det-desc">
-                {placeHolder.age}
+                {displayAge(placeHolder.age)}
               </Descriptions.Item>
               <Descriptions.Item label="Gender" className="pet-det-desc">
                 {placeHolder.gender}
@@ -154,6 +164,17 @@ export default function PetTemplate({ petMetadata }) {
               </Descriptions.Item>
               <Descriptions.Item label="Breed" className="pet-det-desc">
                 {placeHolder.breed}
+              </Descriptions.Item>
+              <Descriptions.Item label="Vaccinated" className="pet-det-desc">
+                {(placeHolder.vaccinated && (
+                  <CheckSquareFilled
+                    style={{ color: "#2de500", fontSize: "18px" }}
+                  />
+                )) || (
+                  <CloseSquareFilled
+                    style={{ color: "#ff0019", fontSize: "18px" }}
+                  />
+                )}
               </Descriptions.Item>
             </Descriptions>
             <Divider />

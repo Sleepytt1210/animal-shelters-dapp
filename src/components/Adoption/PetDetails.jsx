@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import PetTemplate from "./template";
-import { Card, Typography, Row, Col, Button, Space } from "antd";
+import React from "react";
+import PetTemplate from "./PetTemplate";
+import PetForm from "./PetForm";
+import { Typography } from "antd";
 import { isInteger, sampleData } from "../../utils/util";
 import { useParams } from "react-router-dom";
 
 const { Text } = Typography;
 
 export default function PetDetails() {
-  const [isEditable, setEditable] = useState(false);
   const { petID } = useParams();
   const petMetadata = sampleData.find((o) => o.petID == petID);
   const isInt = isInteger(petID);
@@ -15,7 +15,7 @@ export default function PetDetails() {
   if (isInt && petMetadata) {
     return <PetTemplate petMetadata={petMetadata} />;
   } else if (!isInt && petID == "new") {
-    return <PetTemplate />;
+    return <PetForm data={sampleData} />;
   } else {
     return (
       <Text>

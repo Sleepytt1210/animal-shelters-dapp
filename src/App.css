@@ -57,7 +57,7 @@ label {
 
 .header {
   position: fixed;
-  z-index: 1;
+  z-index: 300;
   width: 100%;
   background: #141414;
   display: flex;
@@ -86,16 +86,6 @@ label {
 }
 
 /* Pet Lists */
-.ant-space-item .ant-list {
-  /* max-width: 200px; */
-  /* max-height: 200px; */
-}
-
-.pet-meta-data .ant-card-meta-detail .ant-card-meta-title {
-  font-weight: 600;
-  margin-bottom: 0;
-}
-
 .pet-meta-data .ant-card-meta-detail {
   font-family: 'Merienda';
   text-align: center;
@@ -130,18 +120,26 @@ label {
   padding: 20px 50px 30px;
   text-align: center;
   justify-content: center;
-  align-items: center;
   background-color: #9b6342;
   min-height: 414.14px;
 }
 
 /* Pet Details Image */
+.ant-description-item-content {
+  align-items: center;
+}
+
 .pet-det-card {
   border-radius: 10px;
   box-shadow: 0px 1px 4px 1px #9e7ab9b3;
 }
+
+.pet-det-card div.ant-image {
+  display: flex;
+}
+
 .pet-det-card img {
-  max-height: 400px;
+  max-width: 394px;
 }
 
 .pet-det-desc {
@@ -190,4 +188,20 @@ label {
 
 .announcement-wrapper .ant-typography {
   margin-bottom: 0;
+}
+
+/* Form */
+.form-container {
+  border-radius: 12px;
+  font-family: "Nunito"
+}
+
+.form-container label, .form-container .ant-upload-text {
+  font-size: 14px;
+  font-family: "Nunito";
+}
+
+/* Preview Modal */
+.preview-modal .ant-modal-body {
+  background-color: #f1f2f6;
 }

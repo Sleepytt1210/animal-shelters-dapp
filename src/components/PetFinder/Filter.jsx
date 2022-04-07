@@ -1,161 +1,141 @@
 import React, { useState } from "react";
-import { Form, Row, Col, Input, Button, Select } from "antd";
+import { Form, Row, Col, Button, Select } from "antd";
+import { sizeOptions } from "../../utils/util";
 
 const { Option, OptGroup } = Select;
 
 function TypeSelector() {
   return (
-    <>
-      <Select
-        mode="multiple"
-        allowClear
-        placeholder="Choose a pet"
-        defaultValue={["Cat", "Dog"]}
-      >
-        <Option label="Cat" value="Cat">
-          Cat
-        </Option>
-        <Option label="Dog" value="Dog">
-          Dog
-        </Option>
-      </Select>
-    </>
+    <Select
+      name="petType"
+      mode="multiple"
+      allowClear
+      placeholder="Choose a pet"
+    >
+      <Option key="cat-type" value="Cat">
+        Cat
+      </Option>
+      <Option key="dog-type" value="Dog">
+        Dog
+      </Option>
+    </Select>
   );
 }
 
-function AgeRangeSelector() {
+function AgeRangeSelector({ ageRange }) {
   return (
-    <>
-      <Select mode="multiple" allowClear placeholder="All Ages">
-        <Option label="0 to 6 Months" value="0">
-          0 to 6 Months
+    <Select
+      name="ageRange"
+      mode="multiple"
+      allowClear
+      maxTagCount="responsive"
+      placeholder="All Ages"
+    >
+      {ageRange.map((o, i) => (
+        <Option key={i} value={i}>
+          {o.label}
         </Option>
-        <Option label="6 to 12 Months" value="1">
-          6 to 12 Months
-        </Option>
-        <Option label="1 to 2 Years" value="2">
-          1 to 2 Years
-        </Option>
-        <Option label="2 to 5 Years" value="3">
-          2 to 5 Years
-        </Option>
-        <Option label="5 to 7 Years" value="4">
-          5 to 7 Years
-        </Option>
-        <Option label="Over 8 Years" value="5">
-          Over 8 Years
-        </Option>
-      </Select>
-    </>
+      ))}
+    </Select>
   );
 }
 
 function SizeSelector() {
-  const options = ["Small", "Medium", "Large"];
   return (
-    <>
-      <Select mode="multiple" allowClear placeholder="All Sizes">
-        {options.map((o) => (
-          <Option label={o} value={o}>
-            {o}
-          </Option>
-        ))}
-      </Select>
-    </>
+    <Select name="petSize" mode="multiple" allowClear placeholder="All Sizes">
+      {sizeOptions.map(({ label, value }) => (
+        <Option key={label} value={value}>
+          {label}
+        </Option>
+      ))}
+    </Select>
   );
+}
+
+export function breedOptionGen({ breeds }) {
+  if (!breeds) return "Empty";
+  if (!Array.isArray(breeds)) {
+    const breedEntries = Object.entries(breeds);
+    return breedEntries.map((tuple) => {
+      return (
+        <OptGroup key={`${tuple[0]}-breeds`} label={tuple[0]}>
+          {tuple[1].map((breed) => {
+            return <Option key={breed}>{breed}</Option>;
+          })}
+        </OptGroup>
+      );
+    });
+  }
+
+  return breeds.map((v) => {
+    return <Option key={v}>{v}</Option>;
+  });
 }
 
 function BreedSelector({ breeds }) {
-  const optGen = (breeds) => {
-    const res = [];
-    if (breeds.cat) {
-      res.push(
-        <OptGroup label="Cat">
-          {breeds.cat.map((v) => (
-            <Option key={v} label={v}>
-              {v}
-            </Option>
-          ))}
-        </OptGroup>
-      );
-    }
-    if (breeds.dog) {
-      res.push(
-        <OptGroup label="Dog">
-          {breeds.dog.map((v) => (
-            <Option key={v} label={v}>
-              {v}
-            </Option>
-          ))}
-        </OptGroup>
-      );
-    }
-    return res;
-  };
   return (
-    <>
-      <Select
-        mode="multiple"
-        allowClear
-        style={{ width: "100%" }}
-        placeholder="Any Breeds"
-      >
-        {optGen(breeds)}
-      </Select>
-    </>
+    <Select
+      name="breed"
+      mode="multiple"
+      allowClear
+      style={{ width: "100%" }}
+      placeholder="Any Breeds"
+    >
+      {breedOptionGen(breeds)}
+    </Select>
   );
 }
 
-export default function SearchForm({ breeds }) {
-  const { form } = Form.useForm();
-  const fields = (breeds) => {
+export default function SearchForm({ breeds, ageRange, handleFinish }) {
+  const [form] = Form.useForm();
+
+  const onReset = () => {
+    form.resetFields();
+  };
+
+  const fields = (breeds, ageRange) => {
     return [
       {
         label: "Pet Type",
-        selector: <TypeSelector />,
+        selector: TypeSelector(),
         name: "petType",
       },
       {
         label: "Age range",
-        selector: <AgeRangeSelector />,
+        selector: AgeRangeSelector({ ageRange }),
         name: "ageRange",
       },
       {
         label: "Pet Size",
-        selector: <SizeSelector />,
+        selector: SizeSelector(),
         name: "petSize",
       },
       {
         label: "Breed",
-        selector: <BreedSelector breeds={breeds} />,
+        selector: BreedSelector({ breeds }),
         name: "breed",
       },
     ];
   };
 
-  const fieldComps = [];
-  const fieldsGen = (breeds) => {
-    for (let i of fields(breeds)) {
-      fieldComps.push(
-        <Col span={8} key={i.label}>
-          <Form.Item
-            name={i.name}
-            label={i.label}
-            labelCol={{ span: 24 }}
-            style={{ marginBottom: "15px" }}
-          >
-            {i.selector}
-          </Form.Item>
-        </Col>
-      );
-    }
-    return fieldComps;
-  };
+  const fieldComps = fields(breeds, ageRange).map((o) => (
+    <Col span={8} key={o.label}>
+      <Form.Item
+        name={o.name}
+        label={o.label}
+        labelCol={{ span: 24 }}
+        style={{ marginBottom: "15px" }}
+      >
+        {o.selector}
+      </Form.Item>
+    </Col>
+  ));
 
   return (
     <Form
       form={form}
       name="petFilter"
+      onFinish={(v) => handleFinish(v)}
       style={{
         padding: "10px 20px",
         border: "3px dotted mediumpurple",
@@ -163,7 +143,7 @@ export default function SearchForm({ breeds }) {
       }}
     >
       <Row gutter={20}>
-        {fieldsGen(breeds)}
+        {fieldComps}
         <Col span={8}></Col>
         <Col
           span={8}
@@ -171,19 +151,21 @@ export default function SearchForm({ breeds }) {
             textAlign: "right",
           }}
         >
-          <Button type="primary" htmlType="submit">
-            Search
-          </Button>
-          <Button
-            style={{
-              margin: "0 8px",
-            }}
-            onClick={() => {
-              form.resetFields();
-            }}
-          >
-            Clear
-          </Button>
+          <Form.Item noStyle>
+            <Button type="primary" htmlType="submit">
+              Search
+            </Button>
+          </Form.Item>
+          <Form.Item noStyle>
+            <Button
+              style={{
+                margin: "0 8px",
+              }}
+              onClick={onReset}
+            >
+              Clear
+            </Button>
+          </Form.Item>
         </Col>
       </Row>
     </Form>

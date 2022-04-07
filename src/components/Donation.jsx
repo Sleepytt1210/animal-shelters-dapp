@@ -16,16 +16,17 @@ const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
 const currency = (
-  <Form.Item name="currency" noStyle>
-    <Select defaultValue="SNOW" style={{ width: "auto" }}>
+  <Form.Item name="currency" initialValue="SNOW" noStyle>
+    <Select style={{ width: "auto" }}>
       <Option value="SNOW">SNOW</Option>
       <Option value="ETH">ETH</Option>
     </Select>
   </Form.Item>
 );
 
-const onFinish = (values) => {
+const onFinish = (values, form) => {
   message.success("Submit success!");
+  console.log(form.fields);
   console.log(values);
 };
 
@@ -33,7 +34,11 @@ export default function Donation() {
   const [form] = Form.useForm();
   return (
     <Card className="centered-container-small">
-      <Form form={form} autoComplete="off" onFinish={onFinish}>
+      <Form
+        form={form}
+        autoComplete="off"
+        onFinish={(values) => onFinish(values, form)}
+      >
         <Title level={2} style={{ fontFamily: "Fredoka One" }}>
           Donation
         </Title>

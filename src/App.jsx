@@ -9,7 +9,7 @@ import MenuItems from "./components/MenuItems";
 import Home from "./components/Home/Home.jsx";
 // import NativeBalance from "./components/NativeBalance";
 import Account from "./components/Account/Account";
-import { Layout } from "antd";
+import { Layout, ConfigProvider, Empty } from "antd";
 import Text from "antd/lib/typography/Text";
 import "antd/dist/antd.css";
 import PetFinder from "./components/PetFinder/PetFinder";
@@ -17,6 +17,16 @@ import PetDetails from "./components/Adoption/PetDetails";
 import Donation from "./components/Donation";
 import "./App.css";
 const { Header, Content, Footer } = Layout;
+
+const empComp = () => {
+  return (
+    <Empty
+      description={
+        <span style={{ fontSize: "20px", color: "black" }}>No Data</span>
+      }
+    />
+  );
+};
 
 const styles = {
   content: {
@@ -42,23 +52,24 @@ const styles = {
 
 const App = () => {
   return (
-    <Layout className="layout">
-      <Router>
-        <Header className="header" style={{ background: "#141414" }}>
-          <Logo theme="dark" />
-          <MenuItems />
-          <div style={styles.headerRight}>
-            {/* <NativeBalance /> */}
-            <Account />
-          </div>
-        </Header>
-        <Content style={styles.content}>
-          <Routes>
-            <Route path="/home" element={<Home />} />
-            <Route path="/findpet" element={<PetFinder />} />
-            <Route path="/adoptpet/:petID" element={<PetDetails />} />
-            <Route path="/donation" element={<Donation />} />
-            {/*  <Route path="/onramp">
+    <ConfigProvider renderEmpty={empComp}>
+      <Layout className="layout">
+        <Router>
+          <Header className="header" style={{ background: "#141414" }}>
+            <Logo theme="dark" />
+            <MenuItems />
+            <div style={styles.headerRight}>
+              {/* <NativeBalance /> */}
+              <Account />
+            </div>
+          </Header>
+          <Content style={styles.content}>
+            <Routes>
+              <Route path="/home" element={<Home />} />
+              <Route path="/findpet" element={<PetFinder />} />
+              <Route path="/adoptpet/:petID" element={<PetDetails />} />
+              <Route path="/donation" element={<Donation />} />
+              {/*  <Route path="/onramp">
                 <Ramper />
               </Route>
               <Route path="/erc20transfers">
@@ -71,19 +82,20 @@ const App = () => {
                 <Contract />
               </Route>
     */}
-            <Route path="/*" element={<Navigate to="/home" />} />
-            <Route path="/nonauthenticated">
-              <>Please login using the "Authenticate" button</>
-            </Route>
-          </Routes>
-        </Content>
-      </Router>
-      <Footer style={{ textAlign: "center" }}>
-        <Text style={{ display: "block" }}>
-          Animal Shelter DApp ©2018 Created by Dylon Wong
-        </Text>
-      </Footer>
-    </Layout>
+              <Route path="/*" element={<Navigate to="/home" />} />
+              <Route path="/nonauthenticated">
+                <>Please login using the "Authenticate" button</>
+              </Route>
+            </Routes>
+          </Content>
+        </Router>
+        <Footer style={{ textAlign: "center" }}>
+          <Text style={{ display: "block" }}>
+            Animal Shelter DApp ©2018 Created by Dylon Wong
+          </Text>
+        </Footer>
+      </Layout>
+    </ConfigProvider>
   );
 };
 

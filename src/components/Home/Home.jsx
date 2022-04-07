@@ -110,7 +110,7 @@ export default function Home() {
         <Space direction="vertical" size="large">
           <Typography>
             <Title>Adopt a Pet Now!</Title>
-            <Text>It is time to bring some adorable pets home!</Text>
+            <Text>It is time to find them a home!</Text>
           </Typography>
           <PetList dataSource={sampleData} />
           <Button
