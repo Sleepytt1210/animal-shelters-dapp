@@ -10,8 +10,11 @@ import Huahua from "../components/pet-imgs/chihuahua.jpg";
 import Lucky from "../components/pet-imgs/ragdoll.jpg";
 import Luna from "../components/pet-imgs/ragdoll2.jpg";
 import Tom from "../components/pet-imgs/BritishShorthair2.jpg";
+import Web3 from "web3";
 
-export const { maxWidth, maxHeight } = (394, 394);
+const BN = Web3.utils.toBN;
+
+export const { maxWidth, maxHeight } = (523, 523);
 
 export const sampleData = [
   {
@@ -32,6 +35,7 @@ export const sampleData = [
     breed: "Mongrel",
     size: 1,
     vaccinated: false,
+    adoptable: 0,
   },
   {
     name: "Lavender",
@@ -51,6 +55,7 @@ export const sampleData = [
     breed: "Golden Retriever",
     size: 2,
     vaccinated: true,
+    adoptable: 0,
   },
   {
     name: "Tabby",
@@ -70,6 +75,7 @@ export const sampleData = [
     breed: "American Shorthair",
     size: 2,
     vaccinated: true,
+    adoptable: 1,
   },
   {
     name: "Puff",
@@ -89,6 +95,7 @@ export const sampleData = [
     breed: "British Shorthair",
     size: 1,
     vaccinated: false,
+    adoptable: 1,
   },
   {
     name: "Money",
@@ -108,6 +115,7 @@ export const sampleData = [
     breed: "Pomeranian",
     size: 1,
     vaccinated: false,
+    adoptable: 1,
   },
   {
     name: "Parker",
@@ -127,6 +135,7 @@ export const sampleData = [
     breed: "Persian Cat",
     size: 1,
     vaccinated: true,
+    adoptable: 1,
   },
   {
     name: "Huahua",
@@ -146,6 +155,7 @@ export const sampleData = [
     breed: "Chihuahua",
     size: 0,
     vaccinated: true,
+    adoptable: 1,
   },
   {
     name: "Lucky",
@@ -165,6 +175,7 @@ export const sampleData = [
     breed: "Ragdoll",
     size: 0,
     vaccinated: true,
+    adoptable: 1,
   },
   {
     name: "Luna",
@@ -184,6 +195,7 @@ export const sampleData = [
     breed: "Ragdoll",
     size: 1,
     vaccinated: false,
+    adoptable: 1,
   },
   {
     name: "Tom",
@@ -203,6 +215,7 @@ export const sampleData = [
     breed: "British Shorthair",
     size: 2,
     vaccinated: true,
+    adoptable: 1,
   },
 ];
 
@@ -254,3 +267,11 @@ export const ageRangeOptions = [
 export const maxDescLength = 300;
 
 export const maxDogAge = 300;
+
+export const SNOWDecimal = BN(1e9);
+
+export const getBase64 = (img, callback) => {
+  const reader = new FileReader();
+  reader.addEventListener("load", () => callback(reader.result));
+  reader.readAsDataURL(img);
+};
