@@ -31,9 +31,12 @@ import {
   maxDogAge,
   maxWidth,
   maxHeight,
+  getBase64,
 } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder.jpg";
 import PetTemplate from "./PetTemplate";
+import { useIPFS } from "../../hooks/useIPFS";
+import { AdoptionHooks } from "../../hooks/Contracts";
 
 const { Title } = Typography;
 
@@ -46,17 +49,70 @@ const formItemLayout = {
   },
 };
 
-export default function PetForm({ data }) {
+const typeToExt = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+};
+
+export default function PetForm(props) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
-  const breeds = generateBreedFromData(data);
+  const breeds = generateBreedFromData(props.data);
   const [newBreed, setNewbreed] = useState("");
   const [breedList, setBreedList] = useState(breeds);
   const [breedOptions, setBreedOptions] = useState();
 
-  const onFinish = (values) => {
+  const { uploadImage, uploadFile } = useIPFS();
+  const { addPet, getTotalSupply } = AdoptionHooks(props);
+
+  const onFinish = async (values) => {
     console.log("Received values of form: ", values);
+    const petID = (await getTotalSupply()).toString();
+    const {
+      adoptable: _adoptable,
+      img: _img,
+      name,
+      description,
+      ...attributes
+    } = values;
+
+    const uploadMetadata = async (result) => {
+      message.success(`Image successfully uploaded to IPFS`);
+      const metadata = {
+        petID: petID,
+        name: name,
+        description: description,
+        img: result._ipfs,
+        attributes: attributes,
+      };
+      const metadataIPFS = await uploadFile(
+        petID,
+        metadata,
+        "json",
+        (result) => {
+          message.success(
+            `Metadata successfully uploaded to IPFS at url: ${result._ipfs}`
+          );
+        },
+        console.error
+      );
+      addPet(metadataIPFS._ipfs, _adoptable ? 1 : 0, console.log);
+    };
+
+    uploadImage(
+      petID,
+      _img.file.originFileObj,
+      typeToExt[_img.file.type],
+      uploadMetadata,
+      console.error
+    );
+
+    // console.log("This is values: ", { values });
+    // console.log("This is metadata: ", { metadata });
+    // addPet("ipfs://myBaileyDoggy", values.adoptable ? 0 : 1, (result) => {
+    //   console.log(result);
+    // });
   };
 
   const onTypeChange = () => {
@@ -75,7 +131,7 @@ export default function PetForm({ data }) {
 
   const addItem = (e) => {
     e.preventDefault();
-    const type = form.getFieldsValue("type");
+    const type = form.getFieldValue("type");
     if (newBreed.length > 0) {
       var prevState = { ...breedList };
       prevState[type] = [...prevState[type], newBreed];
@@ -87,12 +143,6 @@ export default function PetForm({ data }) {
   const dummyRequest = ({ onSuccess }) => {
     onSuccess("Ok");
   };
-
-  function getBase64(img, callback) {
-    const reader = new FileReader();
-    reader.addEventListener("load", () => callback(reader.result));
-    reader.readAsDataURL(img);
-  }
 
   const normFile = (info) => {
     if (info.file.status === "uploading") {
@@ -272,7 +322,7 @@ export default function PetForm({ data }) {
         <Form.Item name="adoptable" label="Adoptable" valuePropName="checked">
           <Checkbox />
         </Form.Item>
-        <Form.Item name="characteristic" label="Characteristic">
+        <Form.Item name="description" label="Description">
           <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
         </Form.Item>
         <Form.Item name="suggestion" label="Suggestion">

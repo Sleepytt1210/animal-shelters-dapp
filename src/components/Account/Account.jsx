@@ -88,7 +88,11 @@ function Account() {
                 key={key}
                 onClick={async () => {
                   try {
-                    await authenticate({ provider: connectorId });
+                    await authenticate({
+                      provider: connectorId,
+                      signingMessage:
+                        "Please sign this message to verify the authentication, no transaction fee will be collected for this procedure!",
+                    });
                     window.localStorage.setItem("connectorId", connectorId);
                     setIsAuthModalVisible(false);
                   } catch (e) {

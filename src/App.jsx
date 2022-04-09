@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +16,13 @@ import PetFinder from "./components/PetFinder/PetFinder";
 import PetDetails from "./components/Adoption/PetDetails";
 import Donation from "./components/Donation";
 import "./App.css";
+import AdoptionForm from "./components/Adoption/AdoptionForm";
+import contract from "@truffle/contract";
+import AdoptionAbi from "./contracts/Adoption.json";
+import ShelterNOWAbi from "./contracts/ShelterNOW.json";
+import DonationAbi from "./contracts/Donation.json";
+import Web3 from "web3";
+
 const { Header, Content, Footer } = Layout;
 
 const empComp = () => {
@@ -34,7 +41,7 @@ const styles = {
     justifyContent: "center",
     fontFamily: "Roboto, sans-serif",
     color: "#041836",
-    marginTop: "64px",
+    margin: "64px 0 0",
     padding: "10px 0",
     minHeight: "250px",
     alignContent: "center",
@@ -51,6 +58,80 @@ const styles = {
 };
 
 const App = () => {
+  const [web3, setWeb3] = useState({
+    web3: null,
+    provider: null,
+  });
+  const [contracts, setContracts] = useState({
+    adoption: null,
+    SNOW: null,
+    donation: null,
+  });
+  const [account, setAccount] = useState("");
+
+  const initContract = useCallback(
+    async (provider) => {
+      console.log("init called!");
+      const SNOWInstance = contract(ShelterNOWAbi);
+      SNOWInstance.setProvider(provider);
+      const SNOW = await SNOWInstance.deployed();
+
+      const adoptionInstance = contract(AdoptionAbi, SNOWInstance.address);
+      adoptionInstance.setProvider(provider);
+      const adoption = await adoptionInstance.deployed();
+
+      const donationInstance = contract(DonationAbi, SNOWInstance.address);
+      donationInstance.setProvider(provider);
+      const donation = await donationInstance.deployed();
+
+      setContracts({
+        adoption: adoption,
+        donation: donation,
+        SNOW: SNOW,
+      });
+    },
+    [contracts.SNOW, contracts.adoption, contracts.donation]
+  );
+
+  const initWeb3 = useCallback(async () => {
+    var w3Provider;
+    if (window.ethereum) {
+      w3Provider = window.ethereum;
+      window.ethereum.on("accountsChanged", (accounts) => {
+        setAccount(accounts[0]);
+      });
+      try {
+        // Request account access
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+      } catch (error) {
+        // User denied account access
+        console.error("User denied account access");
+      }
+    }
+    // legacy dapp browsers
+    else if (window.web3) {
+      w3Provider = window.web3.currentProvider;
+    } else {
+      // If no injected web3 instance is detected, fall back to Ganache.
+      w3Provider = new Web3.providers.HttpProvider("http://localhost:8545");
+    }
+    if (!web3.provider || web3.provider !== w3Provider)
+      setWeb3({ provider: w3Provider });
+    const _web3 = new Web3(w3Provider);
+    if (!web3.web3 || web3.web3 !== _web3) setWeb3({ web3: _web3 });
+    if (!account) {
+      const _account = (await _web3.eth.getAccounts())[0];
+      setAccount(_account);
+    }
+    return _web3;
+  }, [web3.web3, web3.provider, account]);
+
+  useEffect(() => {
+    console.log("UseEffect called! ");
+    if (!web3.web3) initWeb3();
+    if (web3.provider && !contracts.SNOW) initContract(web3.provider);
+  }, [web3.web3, web3.provider, contracts.SNOW, initWeb3, initContract]);
+
   return (
     <ConfigProvider renderEmpty={empComp}>
       <Layout className="layout">
@@ -67,8 +148,27 @@ const App = () => {
             <Routes>
               <Route path="/home" element={<Home />} />
               <Route path="/findpet" element={<PetFinder />} />
-              <Route path="/adoptpet/:petID" element={<PetDetails />} />
+              <Route
+                path="/adoptpet/:petID"
+                element={
+                  <PetDetails
+                    web3={web3}
+                    contracts={contracts}
+                    account={account}
+                  />
+                }
+              />
               <Route path="/donation" element={<Donation />} />
+              <Route
+                path="/adoptionForm/:petID"
+                element={
+                  <AdoptionForm
+                    web3={web3}
+                    contracts={contracts}
+                    account={account}
+                  />
+                }
+              />
               {/*  <Route path="/onramp">
                 <Ramper />
               </Route>

@@ -40,8 +40,8 @@ var placeHolder = {
   gender: "Enter Pet's Gender",
   type: "Enter Pet's Type",
   breed: "Enter Breed",
-  characteristic:
-    "Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...Enter characteristic...",
+  description:
+    "Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...",
   suggestion: "Enter suggestion...\nEnter suggestion...\nEnter suggestion...",
   adoptable: false,
 };
@@ -100,7 +100,7 @@ const definedProps = (obj) => {
 
 const CatIcon = (props) => <Icon component={CatAdopted} {...props} />;
 
-export default function PetTemplate({ petMetadata }) {
+export default function PetTemplate({ petMetadata, fromNew }) {
   placeHolder = { ...placeHolder, ...definedProps(petMetadata) };
   return (
     <>
@@ -180,10 +180,10 @@ export default function PetTemplate({ petMetadata }) {
             <Divider />
             <Typography>
               <Title level={4} className="pet-det-title">
-                Characteristics
+                Descriptions
               </Title>
               <Paragraph className="pet-det-desc">
-                {placeHolder.characteristic}
+                {placeHolder.description}
               </Paragraph>
               <Title level={4} className="pet-det-title">
                 Suggestion
@@ -239,14 +239,19 @@ export default function PetTemplate({ petMetadata }) {
             <Row className="button-row">
               <Col span={8}>
                 <Button
+                  disabled={fromNew}
                   className="adoption-btn"
                   style={{ background: "#0a70c1", border: "#0a70c1" }}
+                  onClick={() =>
+                    (window.location = `/adoptionForm/${petMetadata.petID}`)
+                  }
                 >
                   Apply for Adoption
                 </Button>
               </Col>
               <Col span={8} style={{ textAlign: "center" }}>
                 <Button
+                  disabled={fromNew}
                   style={{ background: "hotpink", border: "hotpink" }}
                   className="adoption-btn"
                 >
@@ -255,6 +260,7 @@ export default function PetTemplate({ petMetadata }) {
               </Col>
               <Col span={8} style={{ textAlign: "right" }}>
                 <Button
+                  disabled={fromNew}
                   style={{ background: "#ffcb00", border: "#ffcb00" }}
                   className="adoption-btn"
                   onClick={() => (window.location = "/findpet")}

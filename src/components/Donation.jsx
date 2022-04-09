@@ -24,21 +24,18 @@ const currency = (
   </Form.Item>
 );
 
-const onFinish = (values, form) => {
-  message.success("Submit success!");
-  console.log(form.fields);
-  console.log(values);
-};
-
 export default function Donation() {
   const [form] = Form.useForm();
+
+  const onFinish = (values) => {
+    message.success("Submit success!");
+    console.log(form.fields);
+    console.log(values);
+  };
+
   return (
     <Card className="centered-container-small">
-      <Form
-        form={form}
-        autoComplete="off"
-        onFinish={(values) => onFinish(values, form)}
-      >
+      <Form form={form} autoComplete="off" onFinish={onFinish}>
         <Title level={2} style={{ fontFamily: "Fredoka One" }}>
           Donation
         </Title>

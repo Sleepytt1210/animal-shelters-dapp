@@ -191,6 +191,13 @@ label {
 }
 
 /* Form */
+
+.centered-container-medium {
+  margin: 20px auto;
+  max-width: 60%;
+  border-radius: 25px;
+}
+
 .form-container {
   border-radius: 12px;
   font-family: "Nunito"
@@ -204,4 +211,29 @@ label {
 /* Preview Modal */
 .preview-modal .ant-modal-body {
   background-color: #f1f2f6;
+}
+
+.editable-radio .ant-typography-edit-content {
+  left: 0;
+}
+
+
+@media (max-width: 800px) {
+  h1.ant-typography {
+    font-size: 25px;
+  }
+
+  h2.ant-typography {
+    font-size: 20px;
+  }
+
+  .form-container label {
+    font-size: 11px;
+  }
+
+  .form-container .ant-form-item-label label, 
+  .form-container .ant-form-item-control-input input, 
+  .form-container .ant-form-item .ant-input-textarea-show-count::after{
+    font-size: 10px;
+  }
 }

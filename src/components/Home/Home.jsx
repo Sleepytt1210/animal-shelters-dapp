@@ -6,23 +6,6 @@ import { sampleData } from "../../utils/util";
 import PetList from "../PetLists";
 
 const { Title, Paragraph, Text } = Typography;
-const styles = {
-  title: {
-    fontSize: "20px",
-    fontWeight: "700",
-  },
-  text: {
-    fontSize: "16px",
-  },
-  card: {
-    boxShadow: "0 0.5rem 1.2rem rgb(189 197 209 / 20%)",
-    border: "1px solid #e7eaf3",
-    borderRadius: "0.5rem",
-  },
-  image: {
-    width: "320px",
-  },
-};
 
 export default function Home() {
   return (
@@ -30,7 +13,7 @@ export default function Home() {
       <Row
         gutter={[20, 20]}
         className="content-row"
-        style={{ margin: "unset", paddingTop: "20px" }}
+        style={{ margin: "revert", paddingTop: "20px" }}
       >
         <Col span={24}>
           <Row
@@ -52,7 +35,7 @@ export default function Home() {
               </Typography>
             </Col>
             <Col>
-              <img src={IntroImg} alt="Shelter" style={styles.image} />
+              <img src={IntroImg} alt="Shelter" style={{ width: "320px" }} />
             </Col>
           </Row>
         </Col>
@@ -60,7 +43,7 @@ export default function Home() {
           className="btn-row"
           gutter={35}
           justify="center"
-          style={{ marginLeft: "260px", display: "flex" }}
+          style={{ margin: "0 0 0 26.5%", display: "flex" }}
         >
           <Col>
             <Button
@@ -74,8 +57,8 @@ export default function Home() {
                 outline: "1.5px solid #E9AE0B",
                 borderColor: "#E9AE0B",
                 color: "#000",
-                textShadow: "1px 1px 2px rgb(0 0 0 / 30%);",
-                boxShadow: "0 3px 5px rgb(12 12 12 / 30%);",
+                textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
+                boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
               }}
             >
               <DollarTwoTone
@@ -96,8 +79,8 @@ export default function Home() {
                 background: "#ff32ad",
                 border: "1px solid #ff32ad",
                 color: "#fff",
-                textShadow: "1px 1px 2px rgb(0 0 0 / 30%);",
-                boxShadow: "0 3px 5px rgb(12 12 12 / 30%);",
+                textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
+                boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
               }}
             >
               <HeartTwoTone twoToneColor="red" style={{ fontSize: "17px" }} />
@@ -112,7 +95,7 @@ export default function Home() {
             <Title>Adopt a Pet Now!</Title>
             <Text>It is time to find them a home!</Text>
           </Typography>
-          <PetList dataSource={sampleData} />
+          <PetList dataSource={sampleData.slice(0, 4)} />
           <Button
             size="Large"
             className="home-btn"
@@ -121,8 +104,8 @@ export default function Home() {
               border: "3px solid #7D462F",
               borderRadius: "15px",
               color: "#fff",
-              textShadow: "1px 1px 2px rgb(0 0 0 / 30%);",
-              boxShadow: "0 3px 5px rgb(12 12 12 / 30%);",
+              textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
+              boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
               fontSize: "30px",
               height: "auto",
             }}
