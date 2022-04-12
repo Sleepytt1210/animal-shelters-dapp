@@ -79,9 +79,12 @@ function BreedSelector({ breeds }) {
       mode="multiple"
       allowClear
       style={{ width: "100%" }}
+      filterOption={(input, option) =>
+        option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      }
       placeholder="Any Breeds"
     >
-      {breedOptionGen(breeds)}
+      {breedOptionGen({ breeds })}
     </Select>
   );
 }

@@ -31,9 +31,6 @@ function MenuItems() {
       <Menu.Item key="/statistics">
         <NavLink to="/statistics">Statistics</NavLink>
       </Menu.Item>
-      <Menu.Item key="/dex">
-        <NavLink to="/dex">DEX</NavLink>
-      </Menu.Item>
       <Menu.Item key="/about">
         <NavLink to="/about">About</NavLink>
       </Menu.Item>

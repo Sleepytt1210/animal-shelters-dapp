@@ -15,6 +15,9 @@ import {
   Card,
   Modal,
   message,
+  Col,
+  Row,
+  List,
 } from "antd";
 import { breedOptionGen } from "../PetFinder/Filter";
 import {
@@ -32,11 +35,15 @@ import {
   maxWidth,
   maxHeight,
   getBase64,
+  getText,
+  btoa,
+  BN,
 } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder.jpg";
 import PetTemplate from "./PetTemplate";
 import { useIPFS } from "../../hooks/useIPFS";
-import { AdoptionHooks } from "../../hooks/Contracts";
+import { useAdoptionHooks } from "../../hooks/useAdoptionHooks";
+import { configs } from "eslint-plugin-prettier";
 
 const { Title } = Typography;
 
@@ -54,65 +61,166 @@ const typeToExt = {
   "image/png": "png",
 };
 
-export default function PetForm(props) {
+function BatchForm({ onBatchFinish, ...props }) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState(false);
-  const breeds = generateBreedFromData(props.data);
+  const [JSONFile, setJSONFile] = useState([]);
+  const [thumbnails, setThumbnails] = useState([]);
+
+  const normJSONFile = (info) => {
+    console.log(info.file.originFileObj);
+    if (info.file.status == "done") {
+      getText(info.file.originFileObj, (text) => {
+        const _pets = JSON.parse(text);
+        for (let i in _pets) {
+          _pets[i].uploader = generateUploader(i);
+        }
+        setJSONFile(_pets);
+        setThumbnails(new Array(_pets.length));
+      });
+    }
+    return info && info.fileList;
+  };
+
+  const normFiles = (e, index) => {
+    if (e.file.status === "done") {
+      setLoading(false);
+      const _thumbnails = thumbnails;
+      _thumbnails[index] = e.file;
+      setThumbnails(_thumbnails);
+    }
+
+    if (e.file.status === "error") {
+      setLoading(false);
+    }
+
+    if (e.file.status === "uploading") {
+      setLoading(true);
+      return;
+    }
+    console.log(e.fileList);
+    return e && e.fileList;
+  };
+
+  const beforeUploadJSON = (file) => {
+    if (file.type !== "application/json") return false;
+  };
+
+  const generateUploader = (i) => {
+    return (
+      <Form.Item
+        name={["thumbnail", i]}
+        valuePropName="fileList"
+        getValueFromEvent={normFiles}
+        required
+      >
+        <Upload
+          accept="image/jpeg,image/png"
+          listType="picture"
+          customRequest={props.dummyRequest}
+          showUploadList={{
+            showPreviewIcon: false,
+            showDownloadIcon: false,
+          }}
+          onChange={(e) => normFiles(e, i)}
+          maxCount={1}
+          style={{ height: "150px", width: "150px" }}
+        >
+          <Button>
+            {loading ? <LoadingOutlined /> : <UploadOutlined />}
+            Upload Thumbnail
+          </Button>
+        </Upload>
+      </Form.Item>
+    );
+  };
+
+  return (
+    <Form key={2} name="create_batch" form={form}>
+      <Modal
+        title="Batch Uploads using JSON file"
+        centered
+        visible={props.fromJSON}
+        onOk={() => {
+          form
+            .validateFields()
+            .then(() => {
+              form.resetFields();
+              const values = {
+                json: JSONFile,
+                thumbnails: thumbnails,
+              };
+              onBatchFinish(values);
+              setJSONFile([]);
+              setThumbnails([]);
+            })
+            .catch((info) => {
+              console.log("Validate Failed:", info);
+            });
+        }}
+        onCancel={() => props.setFromJSON(false)}
+        width="75%"
+      >
+        <Form.Item
+          name="json"
+          label="Upload JSON File"
+          valuePropName="fileList"
+          getValueFromEvent={normJSONFile}
+          required
+        >
+          <Upload
+            accept=".json"
+            name="json"
+            customRequest={props.dummyRequest}
+            listType="text"
+            maxCount={1}
+            beforeUpload={beforeUploadJSON}
+            onRemove={() => setJSONFile([])}
+          >
+            <Button icon={<UploadOutlined />}>Click to upload</Button>
+          </Upload>
+        </Form.Item>
+        {JSONFile && JSONFile.length > 0 && JSONFile[0].uploader ? (
+          <List
+            header={<div>List of Pets uploaded</div>}
+            bordered
+            dataSource={JSONFile}
+            itemLayout="vertical"
+            size="small"
+            pagination={{
+              onChange: (page) => {
+                console.log(page);
+              },
+              pageSize: 5,
+            }}
+            renderItem={(pet) => (
+              <List.Item extra={pet.uploader}>
+                <List.Item.Meta
+                  title={pet.name}
+                  description={pet.description}
+                />
+              </List.Item>
+            )}
+          />
+        ) : null}
+      </Modal>
+    </Form>
+  );
+}
+
+function SingleForm({ onFinish, petsMetadata, ...props }) {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const breeds = generateBreedFromData(petsMetadata);
   const [newBreed, setNewbreed] = useState("");
-  const [breedList, setBreedList] = useState(breeds);
+  const [breedList, setBreedList] = useState({
+    Dog: breeds.Dog,
+    Cat: breeds.Cat,
+  });
   const [breedOptions, setBreedOptions] = useState();
 
-  const { uploadImage, uploadFile } = useIPFS();
-  const { addPet, getTotalSupply } = AdoptionHooks(props);
-
-  const onFinish = async (values) => {
-    console.log("Received values of form: ", values);
-    const petID = (await getTotalSupply()).toString();
-    const {
-      adoptable: _adoptable,
-      img: _img,
-      name,
-      description,
-      ...attributes
-    } = values;
-
-    const uploadMetadata = async (result) => {
-      message.success(`Image successfully uploaded to IPFS`);
-      const metadata = {
-        petID: petID,
-        name: name,
-        description: description,
-        img: result._ipfs,
-        attributes: attributes,
-      };
-      const metadataIPFS = await uploadFile(
-        petID,
-        metadata,
-        "json",
-        (result) => {
-          message.success(
-            `Metadata successfully uploaded to IPFS at url: ${result._ipfs}`
-          );
-        },
-        console.error
-      );
-      addPet(metadataIPFS._ipfs, _adoptable ? 1 : 0, console.log);
-    };
-
-    uploadImage(
-      petID,
-      _img.file.originFileObj,
-      typeToExt[_img.file.type],
-      uploadMetadata,
-      console.error
-    );
-
-    // console.log("This is values: ", { values });
-    // console.log("This is metadata: ", { metadata });
-    // addPet("ipfs://myBaileyDoggy", values.adoptable ? 0 : 1, (result) => {
-    //   console.log(result);
-    // });
+  const onFromJSON = () => {
+    props.setFromJSON(true);
   };
 
   const onTypeChange = () => {
@@ -125,8 +233,8 @@ export default function PetForm(props) {
   };
 
   const onPreview = () => {
-    setVisible(true);
     console.log(form.getFieldsValue());
+    props.setVisible(true);
   };
 
   const addItem = (e) => {
@@ -140,10 +248,6 @@ export default function PetForm(props) {
     }
   };
 
-  const dummyRequest = ({ onSuccess }) => {
-    onSuccess("Ok");
-  };
-
   const normFile = (info) => {
     if (info.file.status === "uploading") {
       setLoading(true);
@@ -151,19 +255,16 @@ export default function PetForm(props) {
     }
     if (info.file.status === "done") {
       // Get this url from response in real world.
-      getBase64(info.file.originFileObj, (imageUrl) => {
-        form.setFieldsValue({
-          img: (
-            <Image
-              width={maxWidth}
-              src={imageUrl}
-              placeholder={PlaceHolder}
-              className={"pet-img"}
-            />
-          ),
-        });
-        setLoading(false);
-      });
+      getBase64(
+        info?.file?.originFileObj || info?.originFileObj,
+        (imageUrl) => {
+          form.setFieldsValue({
+            imgUrl: imageUrl,
+            img: info.file,
+          });
+          setLoading(false);
+        }
+      );
     }
   };
 
@@ -194,7 +295,14 @@ export default function PetForm(props) {
 
   return (
     <Card className="centered-container-small form-container">
-      <Title style={{ textAlign: "center" }}>New Pet</Title>
+      <Row>
+        <Col span={18}>
+          <Title style={{ textAlign: "center" }}>New Pet</Title>
+        </Col>
+        <Col>
+          <Button onClick={onFromJSON}>Load from JSON</Button>
+        </Col>
+      </Row>
       <Form
         form={form}
         name="create_new"
@@ -316,23 +424,33 @@ export default function PetForm(props) {
             {breedOptions}
           </Select>
         </Form.Item>
-        <Form.Item name="vaccinated" label="Vaccinated" valuePropName="checked">
+        <Form.Item
+          name="vaccinated"
+          label="Vaccinated"
+          valuePropName="checked"
+          required
+        >
           <Checkbox />
         </Form.Item>
-        <Form.Item name="adoptable" label="Adoptable" valuePropName="checked">
+        <Form.Item
+          name="adoptable"
+          label="Adoptable"
+          valuePropName="checked"
+          required
+        >
           <Checkbox />
         </Form.Item>
-        <Form.Item name="description" label="Description">
+        <Form.Item name="description" label="Description" required>
           <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
         </Form.Item>
-        <Form.Item name="suggestion" label="Suggestion">
+        <Form.Item name="suggestion" label="Suggestion" required>
           <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
         </Form.Item>
-        <Form.Item name="img" label="Upload Image">
+        <Form.Item name="img" label="Upload Image" required>
           <Upload
             listType="picture"
             accept="image/jpeg,image/png"
-            customRequest={dummyRequest}
+            customRequest={props.dummyRequest}
             beforeUpload={beforeUpload}
             onChange={normFile}
             maxCount={1}
@@ -353,9 +471,9 @@ export default function PetForm(props) {
           <Modal
             title="Preview Pet Details"
             centered
-            visible={visible}
-            onOk={() => setVisible(false)}
-            onCancel={() => setVisible(false)}
+            visible={props.visible}
+            onOk={() => props.setVisible(false)}
+            onCancel={() => props.setVisible(false)}
             width="100%"
             className="preview-modal"
           >
@@ -367,5 +485,94 @@ export default function PetForm(props) {
         </Form.Item>
       </Form>
     </Card>
+  );
+}
+
+export default function PetForm(props) {
+  const [visible, setVisible] = useState(false);
+  const [fromJSON, setFromJSON] = useState(false);
+
+  const { uploadImage, uploadFile } = useIPFS();
+  const { addPet, getTotalSupply } = useAdoptionHooks(props);
+
+  const dummyRequest = ({ onSuccess }) => {
+    onSuccess("Ok");
+  };
+
+  const onFinish = async (values, petID) => {
+    const _petID = petID || (await getTotalSupply()).toString();
+    const {
+      adoptable: _adoptable,
+      img: _img,
+      name,
+      description,
+      uploader: _,
+      ...attributes
+    } = { ...values, img: values.img.file || values.img };
+    return new Promise((resolve, reject) => {
+      const uploadMetadata = async (imgIPFS) => {
+        message.success(`Image successfully uploaded to IPFS`);
+        const metadata = {
+          petID: _petID,
+          name: name,
+          description: description,
+          img: imgIPFS._ipfs,
+          attributes: attributes,
+        };
+        const metadataIPFS = await uploadFile(
+          _petID,
+          btoa(JSON.stringify(metadata)),
+          "json",
+          (result) => {
+            message.success(
+              `Metadata successfully uploaded to IPFS at url: ${result._ipfs}`
+            );
+          },
+          console.error
+        );
+        resolve(
+          await addPet(
+            metadataIPFS._ipfs,
+            _adoptable ? 1 : 0,
+            console.log
+          ).catch(reject)
+        );
+      };
+
+      uploadImage(
+        _petID,
+        _img.originFileObj,
+        typeToExt[_img.type],
+        uploadMetadata,
+        console.error
+      );
+    });
+  };
+
+  const onBatchFinish = async (values) => {
+    // Precompute the new pet id batches.
+    const petID = await getTotalSupply();
+    if (values.thumbnails.length != values.json.length) return false;
+    const { thumbnails, json } = values;
+    for (const index in json) {
+      const pet = json[index];
+      pet.img = thumbnails[index];
+      await onFinish(pet, petID.add(BN(index)));
+    }
+  };
+
+  const extendedProps = {
+    ...props,
+    visible: visible,
+    setVisible: setVisible,
+    fromJSON: fromJSON,
+    setFromJSON: setFromJSON,
+    dummyRequest: dummyRequest,
+  };
+  return (
+    <>
+      <SingleForm {...extendedProps} onFinish={onFinish} />
+      <BatchForm {...extendedProps} onBatchFinish={onBatchFinish} />
+    </>
   );
 }

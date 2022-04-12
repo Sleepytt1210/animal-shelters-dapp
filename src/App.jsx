@@ -9,7 +9,7 @@ import MenuItems from "./components/MenuItems";
 import Home from "./components/Home/Home.jsx";
 // import NativeBalance from "./components/NativeBalance";
 import Account from "./components/Account/Account";
-import { Layout, ConfigProvider, Empty } from "antd";
+import { Layout, ConfigProvider, Empty, Modal } from "antd";
 import Text from "antd/lib/typography/Text";
 import "antd/dist/antd.css";
 import PetFinder from "./components/PetFinder/PetFinder";
@@ -22,6 +22,10 @@ import AdoptionAbi from "./contracts/Adoption.json";
 import ShelterNOWAbi from "./contracts/ShelterNOW.json";
 import DonationAbi from "./contracts/Donation.json";
 import Web3 from "web3";
+import { objectIsEmpty } from "./utils/util";
+import { useAdoptionHooks } from "./hooks/useAdoptionHooks";
+import { useGetMetadata } from "./hooks/useGetMetadata";
+import UserProfile from "./components/Profile/UserProfile";
 
 const { Header, Content, Footer } = Layout;
 
@@ -68,10 +72,13 @@ const App = () => {
     donation: null,
   });
   const [account, setAccount] = useState("");
+  const [petsMetadata, setPetsMetadata] = useState([]);
+  const [owner, setOwner] = useState("");
+  const { getMetadataHook } = useGetMetadata();
 
   const initContract = useCallback(
     async (provider) => {
-      console.log("init called!");
+      console.log("Init contracts called!");
       const SNOWInstance = contract(ShelterNOWAbi);
       SNOWInstance.setProvider(provider);
       const SNOW = await SNOWInstance.deployed();
@@ -89,7 +96,11 @@ const App = () => {
         donation: donation,
         SNOW: SNOW,
       });
+
+      const _owner = await SNOW.owner();
+      setOwner(_owner.toLowerCase());
     },
+
     [contracts.SNOW, contracts.adoption, contracts.donation]
   );
 
@@ -132,6 +143,37 @@ const App = () => {
     if (web3.provider && !contracts.SNOW) initContract(web3.provider);
   }, [web3.web3, web3.provider, contracts.SNOW, initWeb3, initContract]);
 
+  const getPetsMetadata = useCallback(async () => {
+    console.log("Fetching pets metadata in function");
+    const _pets = await Promise.all(
+      await contracts.adoption?.pets({ from: account }).then(async (ids) => {
+        return ids.map(async (id) => {
+          return await contracts.adoption.tokenURI(id);
+        });
+      })
+    )
+      .then((uris) => {
+        return uris.map(getMetadataHook);
+      })
+      .then((promises) => {
+        return Promise.all(promises);
+      })
+      .then((metadatas) => {
+        return metadatas.map((metadata) => {
+          const { attributes, ...rest } = metadata;
+          const item = { ...attributes, ...rest };
+          return item;
+        });
+      });
+
+    setPetsMetadata(_pets);
+  }, [contracts.adoption, account, getMetadataHook]);
+
+  useEffect(() => {
+    console.log("Fetching pets from App");
+    if (contracts.adoption && !petsMetadata.length) getPetsMetadata();
+  }, [contracts.adoption, getPetsMetadata, petsMetadata.length]);
+
   return (
     <ConfigProvider renderEmpty={empComp}>
       <Layout className="layout">
@@ -146,15 +188,33 @@ const App = () => {
           </Header>
           <Content style={styles.content}>
             <Routes>
-              <Route path="/home" element={<Home />} />
-              <Route path="/findpet" element={<PetFinder />} />
+              <Route
+                path="/home"
+                element={
+                  <Home
+                    contracts={contracts}
+                    account={account}
+                    petsMetadata={petsMetadata}
+                  />
+                }
+              />
+              <Route
+                path="/findpet"
+                element={
+                  <PetFinder
+                    contracts={contracts}
+                    account={account}
+                    petsMetadata={petsMetadata}
+                  />
+                }
+              />
               <Route
                 path="/adoptpet/:petID"
                 element={
                   <PetDetails
-                    web3={web3}
                     contracts={contracts}
                     account={account}
+                    petsMetadata={petsMetadata}
                   />
                 }
               />
@@ -163,25 +223,24 @@ const App = () => {
                 path="/adoptionForm/:petID"
                 element={
                   <AdoptionForm
-                    web3={web3}
                     contracts={contracts}
                     account={account}
+                    petsMetadata={petsMetadata}
                   />
                 }
               />
-              {/*  <Route path="/onramp">
-                <Ramper />
-              </Route>
-              <Route path="/erc20transfers">
-                <ERC20Transfers />
-              </Route>
-              <Route path="/nftBalance">
-                <NFTBalance />
-              </Route>
-              <Route path="/contract">
-                <Contract />
-              </Route>
-    */}
+              <Route
+                path="/profile"
+                element={
+                  <UserProfile
+                    web3={web3}
+                    contracts={contracts}
+                    account={account}
+                    owner={owner}
+                    petsMetadata={petsMetadata}
+                  />
+                }
+              />
               <Route path="/*" element={<Navigate to="/home" />} />
               <Route path="/nonauthenticated">
                 <>Please login using the "Authenticate" button</>
@@ -199,7 +258,7 @@ const App = () => {
   );
 };
 
-export const Logo = () => (
+const Logo = ({ onClick }) => (
   <div className="logo">
     <a href="/" title="Animal Shelter DApp" className="logo">
       <svg

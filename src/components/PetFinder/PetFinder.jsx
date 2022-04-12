@@ -1,43 +1,76 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Row, Typography } from "antd";
 import SearchForm from "./Filter";
-import {
-  sampleData,
-  generateBreedFromData,
-  ageRangeOptions,
-} from "../../utils/util";
+import { generateBreedFromData, ageRangeOptions } from "../../utils/util";
 import PetList from "../PetLists";
+import { useAdoptionHooks } from "../../hooks/useAdoptionHooks";
 
 const { Title } = Typography;
-
-const breedList = generateBreedFromData(sampleData);
 function ageFilter(petAge, filterAges) {
-  return filterAges.every(
+  return filterAges.some(
     (i) => petAge >= ageRangeOptions[i].min && petAge < ageRangeOptions[i].max
   );
 }
 
-export default function PetFinder() {
-  const [petList, setPetList] = useState(sampleData);
+export default function PetFinder(props) {
+  const pets = props.petsMetadata;
+
+  const [adoptablePets, setAdoptablePets] = useState([]);
+  const [filterResult, setFilterResult] = useState(pets);
+  const [breedlist, setBreedlist] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   function handleFilter(filters) {
-    const result = sampleData.filter((el) => {
+    console.log(filters);
+    const result = adoptablePets.filter((el) => {
       return (
-        (filters.petType ? filters.petType.indexOf(el.type) >= 0 : true) &&
+        (filters.petType ? filters.petType.includes(el.type) : true) &&
         (filters.ageRange ? ageFilter(el.age, filters.ageRange) : true) &&
-        (filters.petSize ? filters.petSize.indexOf(el.size) >= 0 : true) &&
-        (filters.breed ? filters.breed.indexOf(el.breed) >= 0 : true)
+        (filters.petSize ? filters.petSize.includes(el.size) : true) &&
+        (filters.breed ? filters.breed.includes(el.breed) : true)
       );
     });
-    setPetList(result);
+
+    setFilterResult(result);
   }
+
+  const getAdoptablePets = useCallback(async () => {
+    const _adoptablePets = await Promise.all(
+      pets.map(async (o) => {
+        return props.contracts.adoption
+          .getAdoptionState(o.petID, { from: props.account })
+          .then((bnState) => {
+            return bnState == 1;
+          });
+      })
+    ).then((res) => {
+      return res.reduce((acc, cur, i) => {
+        return cur ? acc.concat({ ...pets[i], adoptable: 1 }) : acc;
+      }, []);
+    });
+    console.log(_adoptablePets);
+    setAdoptablePets(_adoptablePets);
+    setBreedlist(generateBreedFromData(_adoptablePets));
+    setFilterResult(_adoptablePets);
+    setLoading(false);
+  }, [props.contracts, props.account, pets]);
+
+  useEffect(() => {
+    console.log("Fetching pets metadata");
+    if (
+      props.contracts.adoption &&
+      pets?.length > 0 &&
+      adoptablePets.length == 0
+    )
+      getAdoptablePets();
+  }, [props.contracts.adoption, pets, adoptablePets, getAdoptablePets]);
 
   return (
     <>
       <div className="spaced-container">
         <Title>Find a Pet</Title>
         <SearchForm
-          breeds={breedList}
+          breeds={breedlist}
           ageRange={ageRangeOptions}
           handleFinish={handleFilter}
         />
@@ -55,7 +88,7 @@ export default function PetFinder() {
         >
           Results:
         </Title>
-        <PetList dataSource={petList} />
+        <PetList dataSource={filterResult} loading={loading} />
       </Row>
     </>
   );

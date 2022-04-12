@@ -237,3 +237,14 @@ label {
     font-size: 10px;
   }
 }
+
+.user-det-container {
+  justify-content: center;
+  text-align: center;
+}
+
+.wallet-desc .ant-row {
+  justify-content: center;
+  text-align: center;
+  margin: 13px 0;
+}

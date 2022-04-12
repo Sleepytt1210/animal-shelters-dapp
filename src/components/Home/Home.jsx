@@ -1,19 +1,49 @@
 import { Divider, Typography, Row, Col, Button, Space } from "antd";
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import IntroImg from "./img/home-img.jpg";
 import { DollarTwoTone, HeartTwoTone } from "@ant-design/icons";
-import { sampleData } from "../../utils/util";
 import PetList from "../PetLists";
+import { BN } from "../../utils/util";
 
 const { Title, Paragraph, Text } = Typography;
 
-export default function Home() {
+export default function Home(props) {
+  const pets = props.petsMetadata;
+
+  const [adoptablePets, setAdoptablePets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const getAdoptablePets = useCallback(async () => {
+    const adoptableCheck = await Promise.all(
+      pets.map(async (o) => {
+        return props.contracts.adoption
+          .getAdoptionState(o.petID, { from: props.account })
+          .then((bnState) => {
+            return bnState == 1;
+          });
+      })
+    );
+    const _adoptablePets = pets.filter((o, i) => adoptableCheck[i]);
+    setAdoptablePets(_adoptablePets);
+    setLoading(false);
+  }, [props.contracts, props.account, pets]);
+
+  useEffect(() => {
+    console.log("Fetching pets metadata");
+    if (
+      props.contracts.adoption &&
+      pets?.length > 0 &&
+      adoptablePets.length == 0
+    )
+      getAdoptablePets();
+  }, [props.contracts.adoption, pets, adoptablePets, getAdoptablePets]);
+
   return (
     <>
       <Row
         gutter={[20, 20]}
         className="content-row"
-        style={{ margin: "revert", paddingTop: "20px" }}
+        style={{ paddingTop: "20px" }}
       >
         <Col span={24}>
           <Row
@@ -43,7 +73,7 @@ export default function Home() {
           className="btn-row"
           gutter={35}
           justify="center"
-          style={{ margin: "0 0 0 26.5%", display: "flex" }}
+          style={{ marginLeft: "26.5%", display: "flex" }}
         >
           <Col>
             <Button
@@ -95,7 +125,7 @@ export default function Home() {
             <Title>Adopt a Pet Now!</Title>
             <Text>It is time to find them a home!</Text>
           </Typography>
-          <PetList dataSource={sampleData.slice(0, 4)} />
+          <PetList {...props} dataSource={adoptablePets} loading={loading} />
           <Button
             size="Large"
             className="home-btn"

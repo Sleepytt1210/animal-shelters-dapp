@@ -1,225 +1,36 @@
 import { Image } from "antd";
 import PlaceHolder from "./placeholder.png";
-import Snowy from "../components/pet-imgs/snowy.jpg";
-import Lavender from "../components/pet-imgs/GoldenR.jpg";
-import Tabby from "../components/pet-imgs/americanS.jpg";
-import Puff from "../components/pet-imgs/BritishShorthair.jpg";
-import Money from "../components/pet-imgs/pome.jpg";
-import Parker from "../components/pet-imgs/persian.jpg";
-import Huahua from "../components/pet-imgs/chihuahua.jpg";
-import Lucky from "../components/pet-imgs/ragdoll.jpg";
-import Luna from "../components/pet-imgs/ragdoll2.jpg";
-import Tom from "../components/pet-imgs/BritishShorthair2.jpg";
 import Web3 from "web3";
 
-const BN = Web3.utils.toBN;
+export const BN = Web3.utils.toBN;
 
 export const { maxWidth, maxHeight } = (523, 523);
 
-export const sampleData = [
-  {
-    name: "Snowy",
-    type: "Dog",
-    petID: 0,
-    age: 1,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Snowy}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "Mongrel",
-    size: 1,
-    vaccinated: false,
-    adoptable: 0,
-  },
-  {
-    name: "Lavender",
-    type: "Dog",
-    petID: 1,
-    age: 29,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Lavender}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "F",
-    breed: "Golden Retriever",
-    size: 2,
-    vaccinated: true,
-    adoptable: 0,
-  },
-  {
-    name: "Tabby",
-    type: "Cat",
-    petID: 2,
-    age: 5,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Tabby}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "American Shorthair",
-    size: 2,
-    vaccinated: true,
-    adoptable: 1,
-  },
-  {
-    name: "Puff",
-    type: "Cat",
-    petID: 3,
-    age: 72,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Puff}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "British Shorthair",
-    size: 1,
-    vaccinated: false,
-    adoptable: 1,
-  },
-  {
-    name: "Money",
-    type: "Dog",
-    petID: 4,
-    age: 34,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Money}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "Pomeranian",
-    size: 1,
-    vaccinated: false,
-    adoptable: 1,
-  },
-  {
-    name: "Parker",
-    type: "Cat",
-    petID: 5,
-    age: 15,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Parker}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "Persian Cat",
-    size: 1,
-    vaccinated: true,
-    adoptable: 1,
-  },
-  {
-    name: "Huahua",
-    type: "Dog",
-    petID: 6,
-    age: 53,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Huahua}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "Chihuahua",
-    size: 0,
-    vaccinated: true,
-    adoptable: 1,
-  },
-  {
-    name: "Lucky",
-    type: "Cat",
-    petID: 7,
-    age: 9,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Lucky}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "Ragdoll",
-    size: 0,
-    vaccinated: true,
-    adoptable: 1,
-  },
-  {
-    name: "Luna",
-    type: "Cat",
-    petID: 8,
-    age: 12,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Luna}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "Ragdoll",
-    size: 1,
-    vaccinated: false,
-    adoptable: 1,
-  },
-  {
-    name: "Tom",
-    type: "Cat",
-    petID: 9,
-    age: 44,
-    img: (
-      <Image
-        width={maxWidth}
-        height={maxHeight}
-        src={Tom}
-        fallback={PlaceHolder}
-        className="pet-list-img"
-      />
-    ),
-    gender: "M",
-    breed: "British Shorthair",
-    size: 2,
-    vaccinated: true,
-    adoptable: 1,
-  },
-];
+export const metadataTemplate = {
+  petID: -1,
+  name: "Enter Pet's Name",
+  vaccinated: false,
+  size: 0,
+  img: (
+    <Image
+      width={maxWidth}
+      src={PlaceHolder}
+      fallback={PlaceHolder}
+      className={"pet-img"}
+    />
+  ),
+  age: 0,
+  gender: "Enter Pet's Gender",
+  type: "Enter Pet's Type",
+  breed: "Enter Breed",
+  description:
+    "Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...",
+  suggestion: "Enter suggestion...Enter suggestion...Enter suggestion...",
+  adoptable: false,
+};
 
 export const generateBreedFromData = (data) => {
+  if (!data || data.length == 0) return {};
   const catBreed = new Set();
   const dogBreed = new Set();
   for (let pet of data) {
@@ -264,6 +75,38 @@ export const ageRangeOptions = [
   { label: "Over 8 Years", min: 84, max: 999 },
 ];
 
+export const stateToString = {
+  0: "Added",
+  1: "Added",
+  2: "Pending",
+  3: "Approved",
+  4: "Confirmed",
+  5: "Rejected",
+  6: "Cancelled",
+  7: "Removed",
+  8: "Euthanised",
+};
+
+export const stateToColor = {
+  0: "green",
+  1: "green",
+  Added: "green",
+  2: "orange",
+  Pending: "orange",
+  3: "geekblue",
+  Approved: "geekblue",
+  4: "green",
+  Confirmed: "green",
+  5: "red",
+  Rejected: "red",
+  6: "red",
+  Cancelled: "red",
+  7: "red",
+  Removed: "red",
+  8: "black",
+  Euthanised: "black",
+};
+
 export const maxDescLength = 300;
 
 export const maxDogAge = 300;
@@ -274,4 +117,18 @@ export const getBase64 = (img, callback) => {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
   reader.readAsDataURL(img);
+};
+
+export const getText = (file, callback) => {
+  const reader = new FileReader();
+  reader.addEventListener("load", () => callback(reader.result));
+  reader.readAsText(file);
+};
+
+export const btoa = (str) => {
+  return Buffer.from(str, "utf8").toString("base64");
+};
+
+export const objectIsEmpty = (obj) => {
+  return obj && Object.keys(obj).lentgh === 0;
 };

@@ -2,12 +2,14 @@ import { useMoralis } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import Blockie from "../Blockie";
 import { Button, Card, Modal } from "antd";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Address from "../Address/Address";
 import { SelectOutlined } from "@ant-design/icons";
 import { getExplorer } from "../../helpers/networks";
 import Text from "antd/lib/typography/Text";
 import { connectors } from "./config";
+import Title from "antd/lib/typography/Title";
+import { useNavigate } from "react-router-dom";
 const styles = {
   account: {
     height: "42px",
@@ -44,13 +46,23 @@ const styles = {
   },
 };
 
-function Account() {
-  const { authenticate, isAuthenticated, account, chainId, logout } =
+function Account(props) {
+  const { authenticate, isAuthenticated, account, chainId, user, logout } =
     useMoralis();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
+  const [address, setAddress] = useState(account);
+  const navigate = useNavigate();
+  const handleRedirect = useCallback(() => {
+    setIsModalVisible(false);
+    navigate(`/profile`, { replace: true });
+  }, [navigate]);
 
-  if (!isAuthenticated || !account) {
+  useEffect(() => {
+    setAddress(props?.account || (isAuthenticated && account));
+  }, [account, isAuthenticated, user, props]);
+
+  if (!isAuthenticated || !address) {
     return (
       <>
         <div style={styles.account} onClick={() => setIsAuthModalVisible(true)}>
@@ -117,9 +129,9 @@ function Account() {
           className="auth-text"
           style={{ marginRight: "5px", ...styles.text }}
         >
-          {getEllipsisTxt(account, 6)}
+          {getEllipsisTxt(address || props.account, 6)}
         </span>
-        <Blockie currentWallet scale={3} />
+        <Blockie currentWallet address={props.account || address} scale={3} />
       </div>
       <Modal
         visible={isModalVisible}
@@ -133,7 +145,7 @@ function Account() {
         style={{ fontSize: "16px", fontWeight: "500" }}
         width="400px"
       >
-        Account
+        <Title level={3}>Account</Title>
         <Card
           style={{
             marginTop: "10px",
@@ -143,13 +155,16 @@ function Account() {
         >
           <Address
             avatar="left"
+            address={address || props.account}
             size={6}
             copyable
             style={{ fontSize: "20px" }}
           />
           <div style={{ marginTop: "10px", padding: "0 10px" }}>
             <a
-              href={`${getExplorer(chainId)}/address/${account}`}
+              href={`${getExplorer(chainId)}/address/${
+                address || props.account
+              }`}
               target="_blank"
               rel="noreferrer"
             >
@@ -158,6 +173,20 @@ function Account() {
             </a>
           </div>
         </Card>
+        <Button
+          size="large"
+          type="primary"
+          style={{
+            width: "100%",
+            marginTop: "10px",
+            borderRadius: "0.5rem",
+            fontSize: "16px",
+            fontWeight: "500",
+          }}
+          onClick={handleRedirect}
+        >
+          Go to Profile
+        </Button>
         <Button
           size="large"
           type="primary"

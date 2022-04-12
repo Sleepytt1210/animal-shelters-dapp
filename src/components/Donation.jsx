@@ -24,7 +24,7 @@ const currency = (
   </Form.Item>
 );
 
-export default function Donation() {
+export default function Donation(props) {
   const [form] = Form.useForm();
 
   const onFinish = (values) => {

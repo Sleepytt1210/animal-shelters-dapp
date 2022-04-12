@@ -11,7 +11,7 @@ import {
   Space,
 } from "antd";
 import React, { useState } from "react";
-import { maxWidth } from "../../utils/util";
+import { metadataTemplate } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder.jpg";
 import Icon, {
   FormOutlined,
@@ -23,28 +23,6 @@ import Icon, {
 } from "@ant-design/icons";
 
 const { Title, Paragraph, Text } = Typography;
-
-var placeHolder = {
-  petID: -1,
-  name: "Enter Pet's Name",
-  vaccinated: false,
-  img: (
-    <Image
-      width={maxWidth}
-      src={PlaceHolder}
-      fallback={PlaceHolder}
-      className={"pet-img"}
-    />
-  ),
-  age: 0,
-  gender: "Enter Pet's Gender",
-  type: "Enter Pet's Type",
-  breed: "Enter Breed",
-  description:
-    "Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...",
-  suggestion: "Enter suggestion...\nEnter suggestion...\nEnter suggestion...",
-  adoptable: false,
-};
 
 const CatAdopted = () => {
   return (
@@ -101,17 +79,22 @@ const definedProps = (obj) => {
 const CatIcon = (props) => <Icon component={CatAdopted} {...props} />;
 
 export default function PetTemplate({ petMetadata, fromNew }) {
-  placeHolder = { ...placeHolder, ...definedProps(petMetadata) };
+  const placeHolder = { ...metadataTemplate, ...definedProps(petMetadata) };
   return (
     <>
       <Row gutter={30} className="spaced-container">
-        <Col span={10}>
+        <Col span={7}>
           <Card className="pet-det-card">
             <Title>{placeHolder.name}</Title>
-            {placeHolder.img}
+            {
+              <Image
+                src={placeHolder.img || placeHolder.imgUrl}
+                placeholder={PlaceHolder}
+              />
+            }
           </Card>
         </Col>
-        <Col span={14}>
+        <Col span={17}>
           <Card className="pet-det-card">
             <Descriptions
               title={

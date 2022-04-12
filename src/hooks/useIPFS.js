@@ -1,5 +1,4 @@
-import { useMoralis, useMoralisFile } from "react-moralis";
-import { Moralis } from "moralis";
+import { useMoralisFile } from "react-moralis";
 import { getBase64 } from "../utils/util";
 
 export const useIPFS = () => {
@@ -8,10 +7,6 @@ export const useIPFS = () => {
   const resolveLink = (url) => {
     if (!url || !url.includes("ipfs://")) return url;
     return url.replace("ipfs://", "https://gateway.ipfs.io/ipfs/");
-  };
-
-  const btoa = (str) => {
-    return Buffer.from(str, "utf8").toString("base64");
   };
 
   const uploadImage = (petID, data, ext, onSuccess, onError) => {
@@ -29,10 +24,10 @@ export const useIPFS = () => {
     });
   };
 
-  const uploadFile = (petID, data, ext, onSuccess, onError) => {
+  const uploadFile = (petID, base64, ext, onSuccess, onError) => {
     return saveFile(
       `pet-${petID}.${ext}`,
-      { base64: btoa(JSON.stringify(data)) },
+      { base64: base64 },
       {
         type: "base64",
         saveIPFS: true,

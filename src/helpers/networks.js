@@ -77,5 +77,8 @@ export const getChainById = (chain) => networkConfigs[chain]?.chainId || null;
 
 export const getExplorer = (chain) => networkConfigs[chain]?.blockExplorerUrl;
 
+export const getTxExplorer = (chain) =>
+  networkConfigs[chain]?.blockExplorerUrl + "/tx/";
+
 export const getWrappedNative = (chain) =>
   networkConfigs[chain]?.wrapped || null;
