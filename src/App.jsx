@@ -9,7 +9,7 @@ import MenuItems from "./components/MenuItems";
 import Home from "./components/Home/Home.jsx";
 // import NativeBalance from "./components/NativeBalance";
 import Account from "./components/Account/Account";
-import { Layout, ConfigProvider, Empty, Modal } from "antd";
+import { Layout, ConfigProvider, Empty } from "antd";
 import Text from "antd/lib/typography/Text";
 import "antd/dist/antd.css";
 import PetFinder from "./components/PetFinder/PetFinder";
@@ -22,8 +22,6 @@ import AdoptionAbi from "./contracts/Adoption.json";
 import ShelterNOWAbi from "./contracts/ShelterNOW.json";
 import DonationAbi from "./contracts/Donation.json";
 import Web3 from "web3";
-import { objectIsEmpty } from "./utils/util";
-import { useAdoptionHooks } from "./hooks/useAdoptionHooks";
 import { useGetMetadata } from "./hooks/useGetMetadata";
 import UserProfile from "./components/Profile/UserProfile";
 
@@ -72,37 +70,35 @@ const App = () => {
     donation: null,
   });
   const [account, setAccount] = useState("");
+  const [petCount, setPetCount] = useState(0);
   const [petsMetadata, setPetsMetadata] = useState([]);
   const [owner, setOwner] = useState("");
   const { getMetadataHook } = useGetMetadata();
 
-  const initContract = useCallback(
-    async (provider) => {
-      console.log("Init contracts called!");
-      const SNOWInstance = contract(ShelterNOWAbi);
-      SNOWInstance.setProvider(provider);
-      const SNOW = await SNOWInstance.deployed();
+  const initContract = useCallback(async (provider) => {
+    console.log("Init contracts called!");
+    const SNOWInstance = contract(ShelterNOWAbi);
+    SNOWInstance.setProvider(provider);
+    const SNOW = await SNOWInstance.deployed();
 
-      const adoptionInstance = contract(AdoptionAbi, SNOWInstance.address);
-      adoptionInstance.setProvider(provider);
-      const adoption = await adoptionInstance.deployed();
+    const adoptionInstance = contract(AdoptionAbi, SNOWInstance.address);
+    adoptionInstance.setProvider(provider);
+    const adoption = await adoptionInstance.deployed();
 
-      const donationInstance = contract(DonationAbi, SNOWInstance.address);
-      donationInstance.setProvider(provider);
-      const donation = await donationInstance.deployed();
+    const donationInstance = contract(DonationAbi, SNOWInstance.address);
+    donationInstance.setProvider(provider);
+    const donation = await donationInstance.deployed();
 
-      setContracts({
-        adoption: adoption,
-        donation: donation,
-        SNOW: SNOW,
-      });
+    setContracts({
+      adoption: adoption,
+      donation: donation,
+      SNOW: SNOW,
+    });
 
-      const _owner = await SNOW.owner();
-      setOwner(_owner.toLowerCase());
-    },
-
-    [contracts.SNOW, contracts.adoption, contracts.donation]
-  );
+    const _owner = await SNOW.owner();
+    setOwner(_owner.toLowerCase());
+    setPetCount(await adoption.pets({ from: account }));
+  });
 
   const initWeb3 = useCallback(async () => {
     var w3Provider;
@@ -124,7 +120,7 @@ const App = () => {
       w3Provider = window.web3.currentProvider;
     } else {
       // If no injected web3 instance is detected, fall back to Ganache.
-      w3Provider = new Web3.providers.HttpProvider("http://localhost:8545");
+      w3Provider = new Web3.providers.HttpProvider("http://localhost:7545");
     }
     if (!web3.provider || web3.provider !== w3Provider)
       setWeb3({ provider: w3Provider });
@@ -171,8 +167,9 @@ const App = () => {
 
   useEffect(() => {
     console.log("Fetching pets from App");
-    if (contracts.adoption && !petsMetadata.length) getPetsMetadata();
-  }, [contracts.adoption, getPetsMetadata, petsMetadata.length]);
+    if (contracts.adoption && petCount && !petsMetadata.length)
+      getPetsMetadata();
+  }, [contracts.adoption, petCount, petsMetadata, getPetsMetadata]);
 
   return (
     <ConfigProvider renderEmpty={empComp}>
@@ -218,7 +215,16 @@ const App = () => {
                   />
                 }
               />
-              <Route path="/donation" element={<Donation />} />
+              <Route
+                path="/donation"
+                element={
+                  <Donation
+                    contracts={contracts}
+                    account={account}
+                    petsMetadata={petsMetadata}
+                  />
+                }
+              />
               <Route
                 path="/adoptionForm/:petID"
                 element={

@@ -40,8 +40,6 @@ export default function FormReview(props) {
     [props.curTx.txHash]
   );
 
-  console.log("chainId", chainId);
-
   useEffect(() => {
     if (data.length > 0) {
       setDetails(data[0].toJSON());
@@ -63,7 +61,9 @@ export default function FormReview(props) {
             key="approve"
             type="primary"
             loading={isLoading}
-            onClick={() => props.approveAdoption(props.adopter, props.petID)}
+            onClick={() =>
+              props.approveAdoption(props.curTx.adopter, props.curTx.petID)
+            }
           >
             Approve
           </Button>,
@@ -71,7 +71,9 @@ export default function FormReview(props) {
             key="reject"
             type="primary"
             loading={isLoading}
-            onClick={() => props.rejectAdoption(props.adopter, props.petID)}
+            onClick={() =>
+              props.rejectAdoption(props.curTx.adopter, props.curTx.petID)
+            }
             style={{ background: "red", borderColor: "red" }}
           >
             Reject

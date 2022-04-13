@@ -1,6 +1,5 @@
 import {
   Form,
-  Row,
   message,
   Input,
   Button,
@@ -10,9 +9,13 @@ import {
   Typography,
   InputNumber,
 } from "antd";
-import React from "react";
+import React, { useState } from "react";
+import { useMoralis } from "react-moralis";
+import { BN } from "../utils/util";
+import { useDonate } from "../hooks/useDonate";
+import SuccessModal from "./SuccessModal";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Paragraph } = Typography;
 const { Option } = Select;
 
 const currency = (
@@ -26,16 +29,38 @@ const currency = (
 
 export default function Donation(props) {
   const [form] = Form.useForm();
+  const { donate } = useDonate(props);
+  const { chainId } = useMoralis();
+  const [submitted, setSubmitted] = useState(false);
+  const [txHash, setTxHash] = useState("");
+
+  const resultProps = {
+    visible: submitted,
+    chainId: chainId,
+    tx: txHash,
+    width: "50%",
+    title: "Thank you for your donation!",
+    description:
+      "We sincerely appreciate your donation! Your transaction has been recorded in the blockchain.",
+  };
 
   const onFinish = (values) => {
-    message.success("Submit success!");
-    console.log(form.fields);
-    console.log(values);
+    const amount = BN(values.amount);
+    donate(amount, values.currency, values.message, (receipt) => {
+      message.success("Submit success!");
+      const tx =
+        receipt.tx ||
+        receipt?.transactionHash ||
+        receipt.receipt?.transactionHash;
+      setTxHash(tx);
+      setSubmitted(true);
+    });
   };
 
   return (
     <Card className="centered-container-small">
-      <Form form={form} autoComplete="off" onFinish={onFinish}>
+      <SuccessModal {...resultProps} />
+      <Form form={form} onFinish={onFinish}>
         <Title level={2} style={{ fontFamily: "Fredoka One" }}>
           Donation
         </Title>

@@ -1,75 +1,89 @@
 import {
-  Form,
-  Row,
   message,
-  Input,
-  Button,
-  Select,
   Card,
   Divider,
   Typography,
-  Descriptions,
   Skeleton,
   Tabs,
   Space,
 } from "antd";
-import { UserOutlined } from "@ant-design/icons";
 import { useMoralis, useMoralisQuery } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import Blockie from "../Blockie";
 import React, { useState, useEffect } from "react";
-import Address from "../Address/Address";
-import SkeletonAvatar from "antd/lib/skeleton/Avatar";
+import { useGetUserDonation } from "../../hooks/useGetUserDonation";
 import WalletDescriptions from "./WalletDescriptions";
 import AdoptionHistory from "./AdoptionHistory";
 import Approval from "./Approval";
+import DonationHistory from "./DonationHistory";
 
 const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
-
-const currency = (
-  <Form.Item name="currency" initialValue="SNOW" noStyle>
-    <Select style={{ width: "auto" }}>
-      <Option value="SNOW">SNOW</Option>
-      <Option value="ETH">ETH</Option>
-    </Select>
-  </Form.Item>
-);
-
 const { TabPane } = Tabs;
 
 export default function UserProfile(props) {
-  const { data, error, isLoading } = useMoralisQuery("User");
-  const { account, isAuthenticated, user, setUserData } = useMoralis();
-  const [address, setAddress] = useState();
+  const { account, isAuthenticated, user, logout, setUserData } = useMoralis();
+  const [address, setAddress] = useState("");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
-  const [isClicked, setIsClicked] = useState(false);
+  const [nameIsUsed, setNameIsUsed] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+  const { totalSNOWDonation, totalETHDonation, donationEvents } =
+    useGetUserDonation(props);
+  const { data, error, isLoading } = useMoralisQuery(
+    "User",
+    (query) => {
+      return newUsername || newUsername.length > 0
+        ? query.equalTo("username", newUsername).find()
+        : [];
+    },
+    [newUsername]
+  );
 
   useEffect(() => {
-    setAddress(props?.address || (isAuthenticated && account));
+    if (isAuthenticated && account) setAddress(account);
+    setIsOwner(props.owner && address?.toLowerCase() == props.owner);
     setUsername(
       isAuthenticated && account && user
         ? user.get("username")
         : "Please login first!"
     );
-  }, [account, isAuthenticated, user, props]);
+  }, [account, isAuthenticated, user, address, props, isOwner]);
 
-  const checkName = async (query) => {
-    query.equalTo("username", newUsername);
-  };
+  useEffect(() => {
+    if (isAuthenticated && address && account != address) {
+      logout();
+      message.info("Account changed, please login again!", 5);
+    }
+  }, [isAuthenticated, account, address]);
 
-  const updateUsername = () => {
+  useEffect(() => {
+    if (data.length > 0) {
+      setNameIsUsed(true);
+    } else {
+      setNameIsUsed(false);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (newUsername.length == 0 || newUsername === username) return;
+    if (nameIsUsed) {
+      console.log("Data", data);
+      message.error("Username has been taken!");
+      return;
+    }
+    console.log("New username", newUsername);
     setUserData({ username: newUsername });
     setUsername(newUsername);
-  };
+    message.success(`Successfully changed username to ${newUsername}!`);
+    setNewUsername("");
+  }, [data, nameIsUsed, newUsername, username, setUserData]);
 
   const editOptions = {
     onChange: setNewUsername,
     onCancel: () => setNewUsername(""),
     tooltip: "Change username",
     maxLength: 15,
-    autoSize: { maxRows: 1, minRows: 1 },
+    autoSize: { maxRows: 1 },
   };
 
   return (
@@ -85,7 +99,7 @@ export default function UserProfile(props) {
               <Blockie
                 currentWallet
                 className="user-avatar"
-                address={props?.account || address}
+                address={address || props?.account}
                 size={28.5}
                 skelSize={120}
               />
@@ -96,7 +110,6 @@ export default function UserProfile(props) {
                 style={{
                   border: "2px solid #777777",
                   borderRadius: "15px",
-                  maxWidth: "fit-content",
                   padding: "2px 9px",
                   margin: "auto",
                 }}
@@ -110,13 +123,20 @@ export default function UserProfile(props) {
           <div className="tab">
             <Tabs defaultActiveKey="1" centered>
               <TabPane tab="Wallet" key="1">
-                <WalletDescriptions {...props} />
+                <WalletDescriptions
+                  {...props}
+                  totalETHDonation={totalETHDonation}
+                  totalSNOWDonation={totalSNOWDonation}
+                />
               </TabPane>
-              <TabPane tab="Adoption" key="2">
+              <TabPane tab="Donation" key="2">
+                <DonationHistory {...props} donationEvents={donationEvents} />
+              </TabPane>
+              <TabPane tab="Adoption" key="3">
                 <AdoptionHistory {...props} />
               </TabPane>
-              {props.owner && address.toLowerCase() == props.owner && (
-                <TabPane tab="Pending Approval" key="3">
+              {isOwner && (
+                <TabPane tab="Pending Approval" key="4">
                   <Approval {...props} />
                 </TabPane>
               )}
@@ -125,7 +145,9 @@ export default function UserProfile(props) {
         </>
       ) : (
         <div className="user-det-container">
-          <Paragraph>Please connect to wallet first!</Paragraph>
+          <Paragraph style={{ fontSize: 18 }}>
+            Please connect to wallet first!
+          </Paragraph>
           <Blockie
             className="user-avatar"
             address={address}

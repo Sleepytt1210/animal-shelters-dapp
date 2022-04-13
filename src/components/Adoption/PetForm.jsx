@@ -6,7 +6,6 @@ import {
   InputNumber,
   Typography,
   Radio,
-  Image,
   Button,
   Upload,
   Divider,
@@ -39,11 +38,9 @@ import {
   btoa,
   BN,
 } from "../../utils/util";
-import PlaceHolder from "../../utils/placeholder.jpg";
 import PetTemplate from "./PetTemplate";
 import { useIPFS } from "../../hooks/useIPFS";
-import { useAdoptionHooks } from "../../hooks/useAdoptionHooks";
-import { configs } from "eslint-plugin-prettier";
+import { useAddPet } from "../../hooks/useAddPet";
 
 const { Title } = Typography;
 
@@ -493,14 +490,14 @@ export default function PetForm(props) {
   const [fromJSON, setFromJSON] = useState(false);
 
   const { uploadImage, uploadFile } = useIPFS();
-  const { addPet, getTotalSupply } = useAdoptionHooks(props);
+  const { addPet, petCount } = useAddPet(props);
 
   const dummyRequest = ({ onSuccess }) => {
     onSuccess("Ok");
   };
 
   const onFinish = async (values, petID) => {
-    const _petID = petID || (await getTotalSupply()).toString();
+    const _petID = petID || petCount.toString();
     const {
       adoptable: _adoptable,
       img: _img,
@@ -551,13 +548,13 @@ export default function PetForm(props) {
 
   const onBatchFinish = async (values) => {
     // Precompute the new pet id batches.
-    const petID = await getTotalSupply();
+    const petID = petCount;
     if (values.thumbnails.length != values.json.length) return false;
     const { thumbnails, json } = values;
     for (const index in json) {
       const pet = json[index];
       pet.img = thumbnails[index];
-      await onFinish(pet, petID.add(BN(index)));
+      await onFinish(pet, petID + BN(index));
     }
   };
 

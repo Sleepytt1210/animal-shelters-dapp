@@ -20,6 +20,23 @@
   src: url(./fonts/Merienda-Regular.ttf) format('truetype');
 }
 
+:root {
+  --red: #ff0019;
+  --brown: #9b6342;
+  --theme-yellow: #fac264;
+  --amber: #ffcb00;
+  --dull-yellow: #e9ae0b;
+  --light-yellow: #ffff99;
+  --green: #0cc72b;
+  --light-green: #2de500;
+  --light-blue: #61dafb;
+  --coolblue: #2e9aff;
+  --blue: #0a70c1;
+  --purple-shadow: #9e7ab9b3;
+  --magenta: #ff32ad;
+  --light-pink: #f691ce;
+}
+
 h1, p, .home-btn, .logo-text, .auth-text{
   font-family: "Fredoka One";
 }
@@ -68,10 +85,6 @@ label {
   box-shadow: 0 1px 10px rgb(151 164 175 / 10%);
 }
 
-.App-link {
-  color: #61dafb;
-}
-
 [data-theme="dark"] .site-layout-content {
   background: #141414;
 }
@@ -117,11 +130,16 @@ label {
 
 .adoption-row {
   margin: 50px auto;
-  padding: 20px 50px 30px;
+  padding: 20px 15px 30px;
   text-align: center;
   justify-content: center;
-  background-color: #9b6342;
+  background-color: var(--brown);
   min-height: 414.14px;
+}
+
+.adoption-row .adoption-row-title {
+  color: #000;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
 }
 
 /* Pet Details Image */
@@ -131,7 +149,7 @@ label {
 
 .pet-det-card {
   border-radius: 10px;
-  box-shadow: 0px 1px 4px 1px #9e7ab9b3;
+  box-shadow: 0px 1px 4px 1px var(--purple-shadow);
 }
 
 .pet-det-card div.ant-image {
@@ -162,7 +180,7 @@ label {
 
 .adoption-btn:hover {
   color:rgba(0, 0, 0, 1);
-  box-shadow: 0px 1px 4px 1px #878787b3;
+  box-shadow: 0px 1px 4px 1px var(--purple-shadow);
 }
 
 .ant-timeline-item-last{
@@ -177,7 +195,7 @@ label {
 }
 
 .announcement-wrapper {
-  border: 1px solid #61dafb;
+  border: 3px solid var(--light-blue);
   border-radius: 5px;
   margin-bottom: 15px;
 }
@@ -247,4 +265,8 @@ label {
   justify-content: center;
   text-align: center;
   margin: 13px 0;
+}
+
+#confirmAdopt {
+  margin-right: 5px;
 }

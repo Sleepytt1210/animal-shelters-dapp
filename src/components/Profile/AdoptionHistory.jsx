@@ -1,49 +1,98 @@
-import { Image, Table, Button, Tag, Tooltip } from "antd";
+import { Image, Table, Button, Space, Tag, Tooltip, Typography } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useMoralis, useMoralisQuery } from "react-moralis";
-import { stateToColor, stateToString } from "../../utils/util";
+import React, { useState, useEffect, useCallback } from "react";
+import { useMoralis } from "react-moralis";
+import { BN, stateToColor, stateToString } from "../../utils/util";
 
-const columns = [
-  {
-    title: "Pet ID",
-    dataIndex: "petID",
-    key: "petID",
-    defaultSortOrder: "descend",
-    sorter: (a, b) => {
-      return a - b;
-    },
-  },
-  {
-    title: "Pet Image",
-    dataIndex: "img",
-    key: "img",
-    render: (imgUrl) => (
-      <Image preview={false} src={imgUrl} width={70} height={70} />
-    ),
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (status) => (
-      <Tag color={stateToColor[status]}>{status.toUpperCase()}</Tag>
-    ),
-  },
-  {
-    title: "Date",
-    dataIndex: "date",
-    key: "date",
-    defaultSortOrder: "descend",
-    sorter: (a, b) => a - b,
-    render: (date) => new Date(date).toLocaleDateString("en-GB"),
-  },
-];
+const { Text } = Typography;
 
 export default function AdoptionHistory(props) {
   const { isAuthenticated, account } = useMoralis();
   const [history, setHistory] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const baseFilter = [
+    { text: "Pending", value: "Pending" },
+    { text: "Approved", value: "Approved" },
+    { text: "Rejected", value: "Rejected" },
+    { text: "Cancelled", value: "Cancelled" },
+    { text: "Confirmed", value: "Confirmed" },
+  ];
+
+  const extendedFilter = [
+    { text: "Added", value: "Added" },
+    { text: "Removed", value: "Removed" },
+    { text: "Euthanised", value: "Euthanised" },
+    ...baseFilter,
+  ];
+
+  const columns = [
+    {
+      title: "Pet ID",
+      dataIndex: "petID",
+      key: "petID",
+      defaultSortOrder: "descend",
+      sorter: (a, b) => {
+        return BN(a.petID) - BN(b.petID);
+      },
+    },
+    {
+      title: "Pet Image",
+      dataIndex: "img",
+      key: "img",
+      render: (imgUrl) => (
+        <Image preview={false} src={imgUrl} width={70} height={70} />
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      filters: props.isOwner ? extendedFilter : baseFilter,
+      onFilter: (value, record) => record.status.indexOf(value) === 0,
+      render: (status) => (
+        <Tag color={stateToColor[status]}>{status.toUpperCase()}</Tag>
+      ),
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      defaultSortOrder: "descend",
+      sorter: (a, b) => {
+        return a.date - b.date;
+      },
+      render: (date) => new Date(date).toLocaleDateString("en-GB"),
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+      key: "action",
+      render: (text, record) =>
+        record.status == "Approved" ? (
+          <Space size="medium">
+            <Button
+              type="primary"
+              shape="round"
+              id="confirmAdopt"
+              style={{ background: "var(--blue)", borderColor: "var(--blue)" }}
+            >
+              Confirm
+            </Button>
+            <Button
+              type="primary"
+              shape="round"
+              id="cancelAdopt"
+              style={{ background: "red", borderColor: "var(--red)" }}
+            >
+              Cancel
+            </Button>
+          </Space>
+        ) : (
+          <Text strong>No action</Text>
+        ),
+    },
+  ];
 
   const getEvents = useCallback(async () => {
     setIsLoading(true);
@@ -77,6 +126,7 @@ export default function AdoptionHistory(props) {
         }, {});
       });
 
+    // Return data needed for table columns
     const formattedData = await Promise.all(
       Object.keys(filteredEvents).map(async (petID) => {
         const event = filteredEvents[petID];

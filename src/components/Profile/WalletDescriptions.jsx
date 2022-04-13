@@ -1,67 +1,59 @@
 import { Row, Col, Statistic, Button } from "antd";
 import React, { useState, useEffect, useMemo } from "react";
 import { useMoralis, useNativeBalance } from "react-moralis";
-import { useERC20Balance } from "../../hooks/useERC20Balance";
-import { BN } from "../../utils/util";
+import { useSNOWBalance } from "../../hooks/useSNOWBalance";
+import { BNTokenValue, tokenValue } from "../../helpers/formatters";
+import { BN, SNOWDecimal } from "../../utils/util";
 
-export default function WalletDescriptions(props) {
-  const { assets } = useERC20Balance();
+export default function WalletDescriptions({
+  totalETHDonation,
+  totalSNOWDonation,
+  ...props
+}) {
   const { data: nativeBalance, nativeToken } = useNativeBalance();
-  const { Moralis } = useMoralis();
-  const [SNOWStats, setSNOWStats] = useState();
-
-  const balances = useMemo(() => {
-    if (!assets) return null;
-    return [...assets];
-  }, [assets]);
-
-  const getSNOW = () => {
-    return balances.find(
-      (token) => token.token_address === props.contracts.SNOW.address
-    );
-  };
-
-  const toWei = (bal, dec) => {
-    return Moralis?.Units?.toWei(bal, dec);
-  };
-
-  useEffect(() => {
-    if (props.contracts.SNOW && balances?.length > 0) {
-      setSNOWStats(getSNOW());
-    }
-  }, [props.contracts.SNOW, balances, getSNOW]);
+  const { balance } = useSNOWBalance(props);
 
   return (
     <div className="wallet-desc">
       <Row>
         <Statistic
           title="SNOW Balance"
-          value={
-            (SNOWStats?.balance &&
-              toWei(SNOWStats.balance, SNOWStats.decimals)) ||
-            10000
-          }
+          value={(balance && BNTokenValue(balance, SNOWDecimal)) || 0}
         />
       </Row>
       <Row style={{ textAlign: "center" }}>
         <Statistic
           title="ETH Balance"
           value={
-            nativeBalance &&
-            nativeToken &&
-            toWei(nativeBalance.balance, nativeToken.decimals)
+            (nativeBalance &&
+              nativeToken &&
+              tokenValue(nativeBalance.balance, nativeToken.decimals)) ||
+            0
           }
         />
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Statistic title="Total SNOW Donated" value={112893} />
+          <Statistic
+            title="Total SNOW Donated"
+            value={
+              (totalSNOWDonation &&
+                BNTokenValue(totalSNOWDonation, SNOWDecimal)) ||
+              0
+            }
+          />
         </Col>
         <Col span={12}>
-          <Statistic title="Total ETH Donated" value={112893} />
+          <Statistic
+            title="Total ETH Donated"
+            value={
+              (totalETHDonation &&
+                tokenValue(totalETHDonation, nativeToken?.decimals)) ||
+              0
+            }
+          />
         </Col>
       </Row>
-      ,
     </div>
   );
 }

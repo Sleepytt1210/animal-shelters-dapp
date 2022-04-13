@@ -20,16 +20,18 @@ import {
   Empty,
   Skeleton,
   Popconfirm,
+  Result,
 } from "antd";
 import { useParams } from "react-router-dom";
-import { isInteger, objectIsEmpty, SNOWDecimal } from "../../utils/util";
+import { isInteger, SNOWDecimal } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder-square.jpg";
 import { CROptions } from "./AddressOption";
-import { useRequestAdoption } from "../../hooks/useAdoptionHooks";
+import { useRequestAdoption } from "../../hooks/useRequestAdoption";
 import { getExplorer } from "../../helpers/networks";
 import { useMoralis, useNewMoralisObject } from "react-moralis";
+import SuccessModal from "../SuccessModal";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const formItemLayout = {
   labelCol: {
@@ -119,56 +121,6 @@ const mockData = {
   infoCorrect: true,
 };
 
-function SuccessModal({ visible, chainId, tx }) {
-  return (
-    <Modal
-      visible={visible}
-      footer={null}
-      onCancel={() => (window.location = "/home")}
-      bodyStyle={{
-        textAlign: "center",
-        padding: "15px",
-        fontSize: "17px",
-        fontWeight: "500",
-      }}
-      style={{ fontSize: "16px", fontWeight: "500" }}
-      width="400px"
-    >
-      <Title level={3}>Application Succeed</Title>
-      <Card
-        style={{
-          marginTop: "10px",
-          borderRadius: "1rem",
-        }}
-        bodyStyle={{ padding: "15px" }}
-      >
-        {`You have successfully applied for the adoption, please wait for the review of the animal shelters before proceeding to the next step. Your transaction hash is `}
-        <a
-          href={`${getExplorer(chainId)}/tx/${tx}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {tx}
-        </a>
-      </Card>
-      <Button
-        size="large"
-        type="primary"
-        style={{
-          width: "100%",
-          marginTop: "10px",
-          borderRadius: "0.5rem",
-          fontSize: "16px",
-          fontWeight: "500",
-        }}
-        onClick={() => (window.location = "/home")}
-      >
-        Back to Home
-      </Button>
-    </Modal>
-  );
-}
-
 export default function AdoptionForm(props) {
   const [form] = Form.useForm();
   const [validPet, setValidPet] = useState(true);
@@ -184,6 +136,15 @@ export default function AdoptionForm(props) {
   const { petID } = useParams();
   const { chainId } = useMoralis();
   const { save } = useNewMoralisObject("ApplicationForm");
+  const resultProps = {
+    visible: submitted,
+    chainId: chainId,
+    tx: txHash,
+    width: "60%",
+    title: "Adoption Application Succeed",
+    description:
+      "You have successfully applied for the adoption, please wait for the review of the animal shelters before proceeding.",
+  };
 
   const adoption = props.contracts.adoption;
   const pets = props.petsMetadata;
@@ -268,7 +229,7 @@ export default function AdoptionForm(props) {
   return (
     <Card className="centered-container-medium form-container">
       <Skeleton loading={isLoading}>
-        <SuccessModal visible={submitted} chainId={chainId} tx={txHash} />
+        <SuccessModal {...resultProps} />
         <Row wrap={false} style={{ alignItems: "center" }}>
           <Col flex="100px">
             <div onClick={autoFill}>

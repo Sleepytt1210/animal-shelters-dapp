@@ -6,7 +6,7 @@ const { Meta } = Card;
 
 export default function PetList({ dataSource, loading }) {
   const col = 4;
-  const limit = 8;
+  const limit = 4;
   const n = dataSource.length;
   const navigate = useNavigate();
   const handleRedirect = useCallback(
@@ -15,12 +15,20 @@ export default function PetList({ dataSource, loading }) {
   );
   return (
     <Skeleton loading={loading}>
-      <Row style={{ minWidth: "100%", justifyContent: "center" }}>
+      <div
+        style={{
+          minWidth: "100%",
+          justifyContent: "center",
+          padding: "20px 30px",
+          background: "var(--theme-yellow)",
+          borderRadius: "15px",
+        }}
+      >
         <List
           grid={{ gutter: 16, column: col }}
           dataSource={dataSource}
           split={false}
-          pagination={n > 0 ? { pageSize: limit } : false}
+          pagination={n > limit ? { pageSize: limit } : false}
           renderItem={(item) => {
             return (
               <List.Item key={item.petID}>
@@ -48,7 +56,7 @@ export default function PetList({ dataSource, loading }) {
             );
           }}
         />
-      </Row>
+      </div>
     </Skeleton>
   );
 }

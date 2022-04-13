@@ -33,6 +33,8 @@ export default function Approval(props) {
           `Approved adoption for ${petID} by adopter ${adopter}! Transaction hash: ${result.tx}`,
           5
         );
+        setIsModalVisible(false);
+        getEvents();
       });
   };
 
@@ -45,6 +47,8 @@ export default function Approval(props) {
           `Rejected adoption for ${petID} by adopter ${adopter}! Transaction hash: ${result.tx}`,
           5
         );
+        setIsModalVisible(false);
+        getEvents();
       });
   };
 
@@ -107,9 +111,6 @@ export default function Approval(props) {
           }
         }
       )
-      .then((events) => {
-        return events.filter((o) => o.returnValues.status == "2");
-      })
       .then((pendingEvents) => {
         return pendingEvents.reduce((acc, cur) => {
           // Group events by pet ID and only store the latest event by comparing the block number.
@@ -120,9 +121,16 @@ export default function Approval(props) {
           return acc;
         }, {});
       })
+      .then((events) => {
+        // Get the latest event object that is waiting for approval (in LOCKED/PENDING) state.
+        return Object.entries(events).filter(
+          (o) => o[1].returnValues.status == "2"
+        );
+      })
       .then((pendingApprovals) => {
-        return Object.keys(pendingApprovals).map(async (petID) => {
-          const event = pendingApprovals[petID];
+        // Return data needed for table columns
+        return pendingApprovals.map(async (eventTuple) => {
+          const event = eventTuple[1];
           return {
             adopter: event.returnValues.adopter,
             tx: event.transactionHash,

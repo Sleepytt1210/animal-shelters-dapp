@@ -3,7 +3,6 @@ import { Row, Typography } from "antd";
 import SearchForm from "./Filter";
 import { generateBreedFromData, ageRangeOptions } from "../../utils/util";
 import PetList from "../PetLists";
-import { useAdoptionHooks } from "../../hooks/useAdoptionHooks";
 
 const { Title } = Typography;
 function ageFilter(petAge, filterAges) {
@@ -79,15 +78,7 @@ export default function PetFinder(props) {
         className="spaced-container adoption-row"
         style={{ marginTop: "5px", textAlign: "center" }}
       >
-        <Title
-          style={{
-            color: "#000",
-            textShadow:
-              "-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff",
-          }}
-        >
-          Results:
-        </Title>
+        <Title className="adoption-row-title">Results:</Title>
         <PetList dataSource={filterResult} loading={loading} />
       </Row>
     </>

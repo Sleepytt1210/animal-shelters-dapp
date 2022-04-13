@@ -9,6 +9,8 @@ import {
   Descriptions,
   Timeline,
   Space,
+  Spin,
+  Skeleton,
 } from "antd";
 import React, { useState } from "react";
 import { metadataTemplate } from "../../utils/util";
@@ -78,103 +80,107 @@ const definedProps = (obj) => {
 
 const CatIcon = (props) => <Icon component={CatAdopted} {...props} />;
 
-export default function PetTemplate({ petMetadata, fromNew }) {
+export default function PetTemplate({ petMetadata, fromNew, isLoading }) {
   const placeHolder = { ...metadataTemplate, ...definedProps(petMetadata) };
   return (
-    <>
+    <Spin spinning={isLoading}>
       <Row gutter={30} className="spaced-container">
         <Col span={7}>
           <Card className="pet-det-card">
-            <Title>{placeHolder.name}</Title>
-            {
-              <Image
-                src={placeHolder.img || placeHolder.imgUrl}
-                placeholder={PlaceHolder}
-              />
-            }
+            <Skeleton loading={isLoading}>
+              <Title>{placeHolder.name}</Title>
+              {
+                <Image
+                  src={placeHolder.img || placeHolder.imgUrl}
+                  placeholder={PlaceHolder}
+                />
+              }
+            </Skeleton>
           </Card>
         </Col>
         <Col span={17}>
           <Card className="pet-det-card">
-            <Descriptions
-              title={
+            <Skeleton loading={isLoading} paragraph={{ rows: 6 }}>
+              <Descriptions
+                title={
+                  <Title level={4} className="pet-det-title">
+                    Details
+                  </Title>
+                }
+                style={{ fontSize: "30px", fontFamily: "Fredoka One" }}
+                extra={
+                  placeHolder.adoptable ? (
+                    <Button
+                      style={{
+                        background: "var(--green)",
+                        border: "0",
+                        fontWeight: "600",
+                        color: "#fff",
+                        fontFamily: "Nunito",
+                      }}
+                      shape="round"
+                    >
+                      Available
+                    </Button>
+                  ) : (
+                    <Button
+                      style={{
+                        background: "red",
+                        border: "0",
+                        color: "#fff",
+                        fontWeight: "600",
+                        fontFamily: "Nunito",
+                      }}
+                      shape="round"
+                    >
+                      Not Available
+                    </Button>
+                  )
+                }
+              >
+                <Descriptions.Item label="Name" className="pet-det-desc">
+                  {placeHolder.name}
+                </Descriptions.Item>
+                <Descriptions.Item label="Age" className="pet-det-desc">
+                  {displayAge(placeHolder.age)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Gender" className="pet-det-desc">
+                  {placeHolder.gender}
+                </Descriptions.Item>
+                <Descriptions.Item label="Type" className="pet-det-desc">
+                  {placeHolder.type}
+                </Descriptions.Item>
+                <Descriptions.Item label="Breed" className="pet-det-desc">
+                  {placeHolder.breed}
+                </Descriptions.Item>
+                <Descriptions.Item label="Vaccinated" className="pet-det-desc">
+                  {(placeHolder.vaccinated && (
+                    <CheckSquareFilled
+                      style={{ color: "var(--light-green)", fontSize: "18px" }}
+                    />
+                  )) || (
+                    <CloseSquareFilled
+                      style={{ color: "var(--red)", fontSize: "18px" }}
+                    />
+                  )}
+                </Descriptions.Item>
+              </Descriptions>
+              <Divider />
+              <Typography>
                 <Title level={4} className="pet-det-title">
-                  Details
+                  Descriptions
                 </Title>
-              }
-              style={{ fontSize: "30px", fontFamily: "Fredoka One" }}
-              extra={
-                placeHolder.adoptable ? (
-                  <Button
-                    style={{
-                      background: "#0cc72b",
-                      border: "0",
-                      fontWeight: "600",
-                      color: "#fff",
-                      fontFamily: "Nunito",
-                    }}
-                    shape="round"
-                  >
-                    Available
-                  </Button>
-                ) : (
-                  <Button
-                    style={{
-                      background: "red",
-                      border: "0",
-                      color: "#fff",
-                      fontWeight: "600",
-                      fontFamily: "Nunito",
-                    }}
-                    shape="round"
-                  >
-                    Not Available
-                  </Button>
-                )
-              }
-            >
-              <Descriptions.Item label="Name" className="pet-det-desc">
-                {placeHolder.name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Age" className="pet-det-desc">
-                {displayAge(placeHolder.age)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Gender" className="pet-det-desc">
-                {placeHolder.gender}
-              </Descriptions.Item>
-              <Descriptions.Item label="Type" className="pet-det-desc">
-                {placeHolder.type}
-              </Descriptions.Item>
-              <Descriptions.Item label="Breed" className="pet-det-desc">
-                {placeHolder.breed}
-              </Descriptions.Item>
-              <Descriptions.Item label="Vaccinated" className="pet-det-desc">
-                {(placeHolder.vaccinated && (
-                  <CheckSquareFilled
-                    style={{ color: "#2de500", fontSize: "18px" }}
-                  />
-                )) || (
-                  <CloseSquareFilled
-                    style={{ color: "#ff0019", fontSize: "18px" }}
-                  />
-                )}
-              </Descriptions.Item>
-            </Descriptions>
-            <Divider />
-            <Typography>
-              <Title level={4} className="pet-det-title">
-                Descriptions
-              </Title>
-              <Paragraph className="pet-det-desc">
-                {placeHolder.description}
-              </Paragraph>
-              <Title level={4} className="pet-det-title">
-                Suggestion
-              </Title>
-              <Paragraph className="pet-det-desc">
-                {placeHolder.suggestion}
-              </Paragraph>
-            </Typography>
+                <Paragraph className="pet-det-desc">
+                  {placeHolder.description}
+                </Paragraph>
+                <Title level={4} className="pet-det-title">
+                  Suggestion
+                </Title>
+                <Paragraph className="pet-det-desc">
+                  {placeHolder.suggestion}
+                </Paragraph>
+              </Typography>
+            </Skeleton>
           </Card>
         </Col>
       </Row>
@@ -196,23 +202,33 @@ export default function PetTemplate({ petMetadata, fromNew }) {
                   will need to pay a deposit first.
                 </Timeline.Item>
                 <Timeline.Item
-                  dot={<ClockCircleOutlined style={{ color: "#ffcb00" }} />}
+                  dot={
+                    <ClockCircleOutlined style={{ color: "var(--amber)" }} />
+                  }
                 >
                   Step 2. Wait for the animal shelter to review your adoption
                   request.
                 </Timeline.Item>
                 <Timeline.Item
-                  dot={<CheckCircleOutlined style={{ color: "#2de500" }} />}
+                  dot={
+                    <CheckCircleOutlined
+                      style={{ color: "var(--light-green)" }}
+                    />
+                  }
                 >
                   Step 3. Pick up the pet at the animal shelter.
                 </Timeline.Item>
-                <Timeline.Item dot={<CatIcon style={{ color: "#2e9aff" }} />}>
+                <Timeline.Item
+                  dot={<CatIcon style={{ color: "var(--blue)" }} />}
+                >
                   Step 4. Get deposit refund and take good care of{" "}
                   {<Text strong>{petMetadata.name}</Text>}!
                 </Timeline.Item>
                 <Timeline.Item
                   label=""
-                  dot={<DollarCircleOutlined style={{ color: "#ff32ad" }} />}
+                  dot={
+                    <DollarCircleOutlined style={{ color: "var(--magenta)" }} />
+                  }
                 >
                   Step 5. (Optional) Tip or Donate to us to support our efforts
                   in aiding and rescueing the animals!
@@ -224,7 +240,7 @@ export default function PetTemplate({ petMetadata, fromNew }) {
                 <Button
                   disabled={fromNew}
                   className="adoption-btn"
-                  style={{ background: "#0a70c1", border: "#0a70c1" }}
+                  style={{ background: "var(--blue)", border: "var(--blue)" }}
                   onClick={() =>
                     (window.location = `/adoptionForm/${petMetadata.petID}`)
                   }
@@ -244,7 +260,7 @@ export default function PetTemplate({ petMetadata, fromNew }) {
               <Col span={8} style={{ textAlign: "right" }}>
                 <Button
                   disabled={fromNew}
-                  style={{ background: "#ffcb00", border: "#ffcb00" }}
+                  style={{ background: "var(--amber)", border: "var(--amber)" }}
                   className="adoption-btn"
                   onClick={() => (window.location = "/findpet")}
                 >
@@ -255,6 +271,6 @@ export default function PetTemplate({ petMetadata, fromNew }) {
           </Card>
         </Col>
       </Row>
-    </>
+    </Spin>
   );
 }

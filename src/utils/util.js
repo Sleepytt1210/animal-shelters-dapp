@@ -107,6 +107,13 @@ export const stateToColor = {
   Euthanised: "black",
 };
 
+export const tokenEnum = {
+  SNOW: 0,
+  ETH: 1,
+  0: "SNOW",
+  1: "ETH",
+};
+
 export const maxDescLength = 300;
 
 export const maxDogAge = 300;
@@ -130,5 +137,5 @@ export const btoa = (str) => {
 };
 
 export const objectIsEmpty = (obj) => {
-  return obj && Object.keys(obj).lentgh === 0;
+  return obj && Object.keys(obj).length === 0;
 };

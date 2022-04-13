@@ -1,7 +1,7 @@
 import { Divider, Typography, Row, Col, Button, Space } from "antd";
 import React, { useState, useEffect, useCallback } from "react";
 import IntroImg from "./img/home-img.jpg";
-import { DollarTwoTone, HeartTwoTone } from "@ant-design/icons";
+import { DollarTwoTone, HeartFilled } from "@ant-design/icons";
 import PetList from "../PetLists";
 import { BN } from "../../utils/util";
 
@@ -24,7 +24,7 @@ export default function Home(props) {
       })
     );
     const _adoptablePets = pets.filter((o, i) => adoptableCheck[i]);
-    setAdoptablePets(_adoptablePets);
+    setAdoptablePets(_adoptablePets.slice(0, 4));
     setLoading(false);
   }, [props.contracts, props.account, pets]);
 
@@ -83,16 +83,16 @@ export default function Home(props) {
               href="/dex"
               className="home-btn"
               style={{
-                background: "#FFFF99",
-                outline: "1.5px solid #E9AE0B",
-                borderColor: "#E9AE0B",
+                background: "var(--light-yellow)",
+                outline: "1.5px solid var(--dull-yellow)",
+                borderColor: "var(--dull-yellow)",
                 color: "#000",
                 textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
                 boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
               }}
             >
               <DollarTwoTone
-                twoToneColor={"#E9AE0B"}
+                twoToneColor={"#e9ae0b"}
                 style={{ fontSize: "17px" }}
               />
               Buy SNOW
@@ -106,43 +106,50 @@ export default function Home(props) {
               href="/donation"
               className="home-btn"
               style={{
-                background: "#ff32ad",
-                border: "1px solid #ff32ad",
+                background: "var(--light-pink)",
+                border: "2px solid var(--magenta)",
                 color: "#fff",
                 textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
                 boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
               }}
             >
-              <HeartTwoTone twoToneColor="red" style={{ fontSize: "17px" }} />
+              <HeartFilled style={{ color: "red", fontSize: "17px" }} />
               Donate
             </Button>
           </Col>
         </Row>
       </Row>
       <Row className="content-row adoption-row">
-        <Space direction="vertical" size="large">
-          <Typography>
-            <Title>Adopt a Pet Now!</Title>
-            <Text>It is time to find them a home!</Text>
-          </Typography>
-          <PetList {...props} dataSource={adoptablePets} loading={loading} />
-          <Button
-            size="Large"
-            className="home-btn"
+        <div style={{ marginBottom: "1em" }}>
+          <Title className="adoption-row-title">Adopt a Pet Now!</Title>
+          <Title
+            level={3}
             style={{
-              background: "#FAC54B",
-              border: "3px solid #7D462F",
-              borderRadius: "15px",
-              color: "#fff",
-              textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
-              boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
-              fontSize: "30px",
-              height: "auto",
+              fontFamily: "Nunito",
+              fontWeight: "600",
             }}
           >
-            <a href="/findpet">Find More</a>
-          </Button>
-        </Space>
+            It is time to find them a home!
+          </Title>
+        </div>
+        <PetList {...props} dataSource={adoptablePets} loading={loading} />
+        <Button
+          size="Large"
+          className="home-btn"
+          style={{
+            marginTop: "10px",
+            background: "var(--theme-yellow)",
+            border: "3px solid #7D462F",
+            borderRadius: "15px",
+            color: "#fff",
+            textShadow: "1px 1px 2px rgb(0 0 0 / 30%)",
+            boxShadow: "0 3px 5px rgb(12 12 12 / 30%)",
+            fontSize: "30px",
+            height: "auto",
+          }}
+        >
+          <a href="/findpet">Find More</a>
+        </Button>
       </Row>
     </>
   );

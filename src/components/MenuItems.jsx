@@ -8,7 +8,6 @@ function MenuItems() {
   return (
     <Menu
       theme="dark"
-      mode="horizontal"
       style={{
         display: "flex",
         fontSize: "17px",
