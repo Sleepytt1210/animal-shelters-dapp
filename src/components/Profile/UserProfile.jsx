@@ -29,7 +29,7 @@ export default function UserProfile(props) {
   const [isOwner, setIsOwner] = useState(false);
   const { totalSNOWDonation, totalETHDonation, donationEvents } =
     useGetUserDonation(props);
-  const { data, error, isLoading } = useMoralisQuery(
+  const { data } = useMoralisQuery(
     "User",
     (query) => {
       return newUsername || newUsername.length > 0
@@ -40,6 +40,17 @@ export default function UserProfile(props) {
   );
 
   useEffect(() => {
+    if (isAuthenticated && address && account != address) {
+      logout().then(() => {
+        setAddress("");
+        setUsername("");
+        setNewUsername("");
+        message.info("Account changed, please login again!", 5);
+      });
+    }
+  }, [isAuthenticated, account, address, logout]);
+
+  useEffect(() => {
     if (isAuthenticated && account) setAddress(account);
     setIsOwner(props.owner && address?.toLowerCase() == props.owner);
     setUsername(
@@ -48,13 +59,6 @@ export default function UserProfile(props) {
         : "Please login first!"
     );
   }, [account, isAuthenticated, user, address, props, isOwner]);
-
-  useEffect(() => {
-    if (isAuthenticated && address && account != address) {
-      logout();
-      message.info("Account changed, please login again!", 5);
-    }
-  }, [isAuthenticated, account, address]);
 
   useEffect(() => {
     if (data.length > 0) {

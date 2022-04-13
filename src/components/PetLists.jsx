@@ -1,4 +1,4 @@
-import { List, Card, Row, Image, Skeleton } from "antd";
+import { List, Card, Image, Skeleton } from "antd";
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 

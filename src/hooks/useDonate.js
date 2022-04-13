@@ -3,22 +3,8 @@ import Web3 from "web3";
 
 // Usage: import AdoptionHooks, then const { method } = AdoptionHooks(props);
 export const useDonate = (props) => {
-  const [donation, setDonation] = useState(null);
-  const [account, setAccount] = useState(null);
-  const [SNOW, setSNOW] = useState(null);
-
-  useEffect(() => {
-    if (!account) setAccount(props.account);
-    if (!SNOW) setSNOW(props.contracts.SNOW);
-    if (!donation) setDonation(props.contracts.donation);
-  }, [
-    props.contracts.SNOW,
-    props.contracts.donation,
-    props.account,
-    account,
-    SNOW,
-    donation,
-  ]);
+  const { donation, SNOW } = props.contracts;
+  const account = props.account;
 
   const donate = (amount, currency, message, callback) => {
     if (currency == "ETH") {
@@ -31,6 +17,8 @@ export const useDonate = (props) => {
         .catch(console.error);
     } else if (currency == "SNOW") {
       const decimalised = Web3.utils.toWei(amount, "gwei");
+      console.log("Donation address", donation.address);
+      console.log("Account", account);
       return SNOW.approve(donation.address, decimalised, { from: account })
         .then(() =>
           donation.donateSNOW(decimalised, message, {

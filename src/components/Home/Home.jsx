@@ -1,11 +1,10 @@
-import { Divider, Typography, Row, Col, Button, Space } from "antd";
+import { Divider, Typography, Row, Col, Button } from "antd";
 import React, { useState, useEffect, useCallback } from "react";
 import IntroImg from "./img/home-img.jpg";
 import { DollarTwoTone, HeartFilled } from "@ant-design/icons";
 import PetList from "../PetLists";
-import { BN } from "../../utils/util";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 
 export default function Home(props) {
   const pets = props.petsMetadata;

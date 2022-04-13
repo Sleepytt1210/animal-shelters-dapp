@@ -1,11 +1,9 @@
-import { Image, Table, Button, Space, Tag, Tooltip, Typography } from "antd";
+import { Table, Button, Tooltip } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
-import { BN, stateToColor, stateToString, tokenEnum } from "../../utils/util";
+import { tokenEnum } from "../../utils/util";
 import { getEllipsisTxt } from "../../helpers/formatters";
-
-const { Text } = Typography;
 
 export default function DonationHistory({ donationEvents, ...props }) {
   const { isAuthenticated, account } = useMoralis();
@@ -73,7 +71,7 @@ export default function DonationHistory({ donationEvents, ...props }) {
     );
     setHistory(formattedData);
     setIsLoading(false);
-  }, [props.contracts.donation, account, donationEvents, props.web3.web3.eth]);
+  }, [account, donationEvents, props.web3.web3.eth]);
 
   useEffect(() => {
     if (

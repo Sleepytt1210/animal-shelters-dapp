@@ -103,7 +103,7 @@ export default function AdoptionHistory(props) {
           fromBlock: 0,
           toBlock: "latest",
         },
-        (errors, events) => {
+        (errors) => {
           if (errors) {
             console.log("Error in getting past events: ", errors);
             return;
