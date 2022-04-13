@@ -13,13 +13,10 @@ contract Donation is Ownable {
     mapping(address => mapping(Token => uint256)) private _donorToDonation;
 
     // Uncollected token donations from the contract.
-    mapping(Token => uint256) private _uncollectedDonation;
+    uint256 private _uncollectedETHDonation;
 
     // Total token donation.
     mapping(Token => uint256) private _totalDonation;
-
-    // Top 3 donors by token.
-    mapping(Token => address[3]) private _topDonors;
 
     // An array of unique donor addresses.
     address[] donors;
@@ -44,10 +41,9 @@ contract Donation is Ownable {
     /**
      * @dev Initialises the Donation smart contract and assign a corresponding SNOW token contract.
      *
-     * @param _SNOWAddress: The address to the SNOW token contract.
      */
-    constructor(address _SNOWAddress) {
-        SNOW = ShelterNOW(_SNOWAddress);
+    constructor() {
+        SNOW = ShelterNOW(0xD7ACd2a9FD159E69Bb102A1ca21C9a3e3A5F771B);
     }
 
     /**
@@ -57,15 +53,13 @@ contract Donation is Ownable {
         require(amount > 0, "Donation: Donation cannot be zero!");
         address donor = msg.sender;
 
-        _uncollectedDonation[Token.SNOW] += amount;
         _donorToDonation[donor][Token.SNOW] += amount;
         _totalDonation[Token.SNOW] += amount;
 
         if (_donorIsNew(donor)) donors.push(donor);
         if (bytes(message).length == 0) message = "None";
 
-        _setTopDonors(donor, Token.SNOW);
-        SNOW.transferFrom(donor, address(this), amount);
+        SNOW.transferFrom(donor, owner(), amount);
         emit Donate(donor, Token.SNOW, amount, message);
     }
 
@@ -77,14 +71,13 @@ contract Donation is Ownable {
         require(amount > 0, "Donation: Donation cannot be zero!");
         address donor = msg.sender;
 
-        _uncollectedDonation[Token.ETH] += amount;
+        _uncollectedETHDonation += amount;
         _donorToDonation[donor][Token.ETH] += amount;
         _totalDonation[Token.ETH] += amount;
 
         if (_donorIsNew(donor)) donors.push(donor);
         if (bytes(message).length == 0) message = "None";
 
-        _setTopDonors(donor, Token.ETH);
         emit Donate(donor, Token.ETH, amount, message);
     }
 
@@ -116,15 +109,9 @@ contract Donation is Ownable {
 
     /**
      * @dev Get total amount of uncollected donations of a token.
-     *
-     * @param tokenType: Type of token.
      */
-    function getUncollectedDonation(Token tokenType)
-        public
-        view
-        returns (uint256)
-    {
-        return _uncollectedDonation[tokenType];
+    function getUncollectedDonation() public view returns (uint256) {
+        return _uncollectedETHDonation;
     }
 
     /**
@@ -140,33 +127,17 @@ contract Donation is Ownable {
         return _donorToDonation[donor][tokenType];
     }
 
-    function getTopDonors(Token tokenType)
-        public
-        view
-        returns (
-            address,
-            address,
-            address
-        )
-    {
-        return (
-            _topDonors[tokenType][0],
-            _topDonors[tokenType][1],
-            _topDonors[tokenType][2]
-        );
-    }
-
     /**
      * @dev Withdraw ether from the smart contract if any.
      */
     function withdrawEther() internal onlyOwner {
-        uint256 amount = _uncollectedDonation[Token.ETH];
+        uint256 amount = _uncollectedETHDonation;
         require(
             address(this).balance > 0 && amount > 0,
             "Nothing to be withdrawn from the smart contract!"
         );
 
-        _uncollectedDonation[Token.ETH] = 0;
+        _uncollectedETHDonation = 0;
         payable(owner()).transfer(amount);
 
         emit Withdraw(Token.ETH, amount);
@@ -176,43 +147,14 @@ contract Donation is Ownable {
      * @dev Withdraw SNOW from the smart contract if any.
      */
     function withdrawSNOW() internal onlyOwner {
-        uint256 amount = _uncollectedDonation[Token.SNOW];
-
-        require(amount > 0, "No SNOW to be collected from this contract!");
-        _uncollectedDonation[Token.SNOW] = 0;
-        SNOW.transfer(owner(), amount);
-
-        emit Withdraw(Token.SNOW, amount);
-    }
-
-    /**
-     * @dev Update the top donors if the `donor`'s accumulated donation surpasses the current top 3 in the ranking.
-     *
-     * @param donor: The address of the donor
-     * @param tokenType: Type of token in the ranking.
-     */
-    function _setTopDonors(address donor, Token tokenType) internal {
-        require(donor != address(0), "Donation: Address cannot be empty!");
-        uint256 amount = _donorToDonation[donor][tokenType];
-
-        (address top1, address top2, address top3) = (
-            _topDonors[tokenType][0],
-            _topDonors[tokenType][1],
-            _topDonors[tokenType][2]
+        uint256 contractBalance = SNOW.balanceOf(address(this));
+        require(
+            contractBalance > 0,
+            "No SNOW to be collected from this contract!"
         );
+        SNOW.transfer(owner(), contractBalance);
 
-        if (amount < _donorToDonation[top3][tokenType]) return;
-
-        if (amount > _donorToDonation[top1][tokenType]) {
-            _topDonors[tokenType][2] = top2;
-            _topDonors[tokenType][1] = top1;
-            _topDonors[tokenType][0] = donor;
-        } else if (amount > _donorToDonation[top2][tokenType]) {
-            _topDonors[tokenType][2] = top2;
-            _topDonors[tokenType][1] = donor;
-        } else if (amount > _donorToDonation[top3][tokenType]) {
-            _topDonors[tokenType][2] = donor;
-        }
+        emit Withdraw(Token.SNOW, contractBalance);
     }
 
     /**
