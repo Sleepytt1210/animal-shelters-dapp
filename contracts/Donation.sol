@@ -12,9 +12,6 @@ contract Donation is Ownable {
     // Mapping from donors to respective token donation.
     mapping(address => mapping(Token => uint256)) private _donorToDonation;
 
-    // Uncollected token donations from the contract.
-    uint256 private _uncollectedETHDonation;
-
     // Total token donation.
     mapping(Token => uint256) private _totalDonation;
 
@@ -42,12 +39,15 @@ contract Donation is Ownable {
      * @dev Initialises the Donation smart contract and assign a corresponding SNOW token contract.
      *
      */
-    constructor() {
-        SNOW = ShelterNOW(0xD7ACd2a9FD159E69Bb102A1ca21C9a3e3A5F771B);
+    constructor(address _SNOWaddr) {
+        SNOW = ShelterNOW(_SNOWaddr);
     }
 
     /**
      * @dev Donate to the animal shelter using SNOW token.
+     *
+     * @param amount Amount of SNOW to be donated.
+     * @param message Short message about the donation.
      */
     function donateSNOW(uint256 amount, string memory message) public {
         require(amount > 0, "Donation: Donation cannot be zero!");
@@ -65,18 +65,20 @@ contract Donation is Ownable {
 
     /**
      * @dev Donate to the animal shelter using Ethereum.
+     *
+     * @param message Short message about the donation.
      */
     function donateETH(string memory message) public payable {
         uint256 amount = msg.value;
         require(amount > 0, "Donation: Donation cannot be zero!");
         address donor = msg.sender;
 
-        _uncollectedETHDonation += amount;
         _donorToDonation[donor][Token.ETH] += amount;
         _totalDonation[Token.ETH] += amount;
 
         if (_donorIsNew(donor)) donors.push(donor);
         if (bytes(message).length == 0) message = "None";
+        payable(owner()).transfer(amount);
 
         emit Donate(donor, Token.ETH, amount, message);
     }
@@ -108,13 +110,6 @@ contract Donation is Ownable {
     }
 
     /**
-     * @dev Get total amount of uncollected donations of a token.
-     */
-    function getUncollectedDonation() public view returns (uint256) {
-        return _uncollectedETHDonation;
-    }
-
-    /**
      * @dev Get total amount of donations by a donor of a token.
      *
      * @param tokenType: Type of token.
@@ -131,16 +126,15 @@ contract Donation is Ownable {
      * @dev Withdraw ether from the smart contract if any.
      */
     function withdrawEther() internal onlyOwner {
-        uint256 amount = _uncollectedETHDonation;
+        uint256 contractBalance = address(this).balance;
         require(
-            address(this).balance > 0 && amount > 0,
+            contractBalance > 0,
             "Nothing to be withdrawn from the smart contract!"
         );
 
-        _uncollectedETHDonation = 0;
-        payable(owner()).transfer(amount);
+        payable(owner()).transfer(contractBalance);
 
-        emit Withdraw(Token.ETH, amount);
+        emit Withdraw(Token.ETH, contractBalance);
     }
 
     /**
