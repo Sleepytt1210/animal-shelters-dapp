@@ -47,7 +47,10 @@ export default function FormReview(props) {
   }, [data]);
 
   return (
-    <Skeleton loading={!props.visible || isLoading} style={{ width: "80%" }}>
+    <Skeleton
+      loading={!props.visible || isLoading}
+      style={{ width: "80%", display: props.visible ? "block" : "none" }}
+    >
       <Modal
         visible={props.visible}
         onOk={() => props.setIsModalVisible(false)}

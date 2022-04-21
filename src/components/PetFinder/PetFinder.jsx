@@ -1,77 +1,68 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Row, Typography } from "antd";
-import SearchForm from "./Filter";
+import SearchForm, { breedOptionGen } from "./Filter";
 import { generateBreedFromData, ageRangeOptions } from "../../utils/util";
 import PetList from "../PetLists";
+import { useGetAdoptablePets } from "../../hooks/useGetAdoptablePets";
 
 const { Title } = Typography;
-function ageFilter(petAge, filterAges) {
-  return filterAges.some(
-    (i) => petAge >= ageRangeOptions[i].min && petAge < ageRangeOptions[i].max
-  );
-}
 
 export default function PetFinder(props) {
   const pets = props.petsMetadata;
-
-  const [adoptablePets, setAdoptablePets] = useState([]);
   const [filterResult, setFilterResult] = useState(pets);
   const [breedlist, setBreedlist] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [breedOption, setBreedOptions] = useState(breedlist);
+  const [isLoading, setIsLoading] = useState(true);
+  const { adoptablePets } = useGetAdoptablePets({ ...props, setIsLoading });
+
+  function ageFilter(petAge, filterAges) {
+    return filterAges.some(
+      (i) => petAge >= ageRangeOptions[i].min && petAge < ageRangeOptions[i].max
+    );
+  }
+
+  function handleTypeChange(e) {
+    var res = {};
+    if (e?.length)
+      e.map((type) => {
+        res[type] = breedlist[type];
+      });
+    else res = breedlist;
+    setBreedOptions(res);
+  }
 
   function handleFilter(filters) {
-    console.log(filters);
     const result = adoptablePets.filter((el) => {
       return (
-        (filters.petType ? filters.petType.includes(el.type) : true) &&
-        (filters.ageRange ? ageFilter(el.age, filters.ageRange) : true) &&
-        (filters.petSize ? filters.petSize.includes(el.size) : true) &&
-        (filters.breed ? filters.breed.includes(el.breed) : true)
+        (filters.petType?.length ? filters.petType.includes(el.type) : true) &&
+        (filters.ageRange?.length
+          ? ageFilter(el.age, filters.ageRange)
+          : true) &&
+        (filters.petSize?.length ? filters.petSize.includes(el.size) : true) &&
+        (filters.breed?.length ? filters.breed.includes(el.breed) : true)
       );
     });
-
     setFilterResult(result);
   }
 
-  const getAdoptablePets = useCallback(async () => {
-    const _adoptablePets = await Promise.all(
-      pets.map(async (o) => {
-        return props.contracts.adoption
-          .getAdoptionState(o.petID, { from: props.account })
-          .then((bnState) => {
-            return bnState == 1;
-          });
-      })
-    ).then((res) => {
-      return res.reduce((acc, cur, i) => {
-        return cur ? acc.concat({ ...pets[i], adoptable: 1 }) : acc;
-      }, []);
-    });
-    console.log(_adoptablePets);
-    setAdoptablePets(_adoptablePets);
-    setBreedlist(generateBreedFromData(_adoptablePets));
-    setFilterResult(_adoptablePets);
-    setLoading(false);
-  }, [props.contracts, props.account, pets]);
-
   useEffect(() => {
     console.log("Fetching pets metadata");
-    if (
-      props.contracts.adoption &&
-      pets?.length > 0 &&
-      adoptablePets.length == 0
-    )
-      getAdoptablePets();
-  }, [props.contracts.adoption, pets, adoptablePets, getAdoptablePets]);
+    if (adoptablePets.length != 0) {
+      setFilterResult(adoptablePets);
+      setBreedlist(generateBreedFromData(adoptablePets));
+      setBreedOptions(generateBreedFromData(adoptablePets));
+    }
+  }, [pets, adoptablePets]);
 
   return (
     <>
       <div className="spaced-container">
         <Title>Find a Pet</Title>
         <SearchForm
-          breeds={breedlist}
+          breeds={breedOption}
           ageRange={ageRangeOptions}
           handleFinish={handleFilter}
+          handleOnTypeChange={handleTypeChange}
         />
       </div>
       <Row
@@ -79,7 +70,7 @@ export default function PetFinder(props) {
         style={{ marginTop: "5px", textAlign: "center" }}
       >
         <Title className="adoption-row-title">Results:</Title>
-        <PetList dataSource={filterResult} loading={loading} />
+        <PetList dataSource={filterResult} loading={isLoading} />
       </Row>
     </>
   );

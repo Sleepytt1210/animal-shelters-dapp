@@ -9,8 +9,9 @@ export const { maxWidth, maxHeight } = (523, 523);
 export const metadataTemplate = {
   petID: -1,
   name: "Enter Pet's Name",
-  vaccinated: false,
-  size: 0,
+  description:
+    "Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...",
+  suggestion: "Enter suggestion...Enter suggestion...Enter suggestion...",
   img: (
     <Image
       width={maxWidth}
@@ -20,13 +21,12 @@ export const metadataTemplate = {
     />
   ),
   age: 0,
-  gender: "Enter Pet's Gender",
-  type: "Enter Pet's Type",
-  breed: "Enter Breed",
-  description:
-    "Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...Enter description...",
-  suggestion: "Enter suggestion...Enter suggestion...Enter suggestion...",
   adoptable: false,
+  breed: "Enter Breed",
+  gender: "Enter Pet's Gender",
+  size: 0,
+  type: "Enter Pet's Type",
+  vaccinated: false,
 };
 
 export const generateBreedFromData = (data) => {
@@ -76,34 +76,38 @@ export const ageRangeOptions = [
 ];
 
 export const stateToString = {
-  0: "Added",
-  1: "Added",
+  0: "Not Adoptable",
+  1: "Adoptable",
   2: "Pending",
   3: "Approved",
-  4: "Confirmed",
+  4: "Adopted",
   5: "Rejected",
   6: "Cancelled",
-  7: "Removed",
-  8: "Euthanised",
+  7: "Added",
+  8: "Removed",
+  9: "Euthanised",
 };
 
 export const stateToColor = {
-  0: "green",
+  0: "volcano",
+  "Not Adoptable": "volcano",
   1: "green",
-  Added: "green",
+  Adoptable: "green",
   2: "orange",
   Pending: "orange",
   3: "geekblue",
   Approved: "geekblue",
-  4: "green",
-  Confirmed: "green",
+  4: "magenta",
+  Adopted: "magenta",
   5: "red",
   Rejected: "red",
   6: "red",
   Cancelled: "red",
-  7: "red",
+  7: "#87d068",
+  Added: "#87d068",
+  8: "red",
   Removed: "red",
-  8: "black",
+  9: "black",
   Euthanised: "black",
 };
 

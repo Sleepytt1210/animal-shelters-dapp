@@ -40,6 +40,7 @@ contract Adoption is Ownable, Pet {
         ADOPTED,
         REJECTED,
         CANCELLED,
+        ADDED,
         EUTHANISED,
         REMOVED
     }
@@ -95,7 +96,7 @@ contract Adoption is Ownable, Pet {
             _petToAdoptionState[newPetID] = newStatus;
         _tempAdopters[newPetID] = msg.sender;
 
-        emit AdoptionStatus(msg.sender, newPetID, newStatus);
+        emit AdoptionStatus(msg.sender, newPetID, AdoptionState.ADDED);
     }
 
     /**

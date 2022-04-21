@@ -11,7 +11,7 @@ import { useMoralis, useMoralisQuery } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import Blockie from "../Blockie";
 import React, { useState, useEffect } from "react";
-import { useGetUserDonation } from "../../hooks/useGetUserDonation";
+import { useGetDonation } from "../../hooks/useGetDonation";
 import WalletDescriptions from "./WalletDescriptions";
 import AdoptionHistory from "./AdoptionHistory";
 import Approval from "./Approval";
@@ -27,8 +27,8 @@ export default function UserProfile(props) {
   const [newUsername, setNewUsername] = useState("");
   const [nameIsUsed, setNameIsUsed] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const { totalSNOWDonation, totalETHDonation, donationEvents } =
-    useGetUserDonation(props);
+  const { userSNOWDonation, userETHDonation, donationEvents } =
+    useGetDonation(props);
   const { data } = useMoralisQuery(
     "User",
     (query) => {
@@ -129,15 +129,15 @@ export default function UserProfile(props) {
               <TabPane tab="Wallet" key="1">
                 <WalletDescriptions
                   {...props}
-                  totalETHDonation={totalETHDonation}
-                  totalSNOWDonation={totalSNOWDonation}
+                  totalETHDonation={userETHDonation}
+                  totalSNOWDonation={userSNOWDonation}
                 />
               </TabPane>
               <TabPane tab="Donation" key="2">
                 <DonationHistory {...props} donationEvents={donationEvents} />
               </TabPane>
               <TabPane tab="Adoption" key="3">
-                <AdoptionHistory {...props} />
+                <AdoptionHistory {...props} isOwner={isOwner} />
               </TabPane>
               {isOwner && (
                 <TabPane tab="Pending Approval" key="4">

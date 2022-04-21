@@ -35,6 +35,7 @@
   --purple-shadow: #9e7ab9b3;
   --magenta: #ff32ad;
   --light-pink: #f691ce;
+  --light-grey: #eeeeee;
 }
 
 h1, p, .home-btn, .logo-text, .auth-text{
@@ -269,4 +270,21 @@ label {
 
 #confirmAdopt {
   margin-right: 5px;
+}
+
+/* Statistics */
+
+/* .stat-options .ant-radio-button-wrapper, .stat-options .ant-radio-button-wrapper-checked {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+} */
+
+.round-card {
+  border-radius: 10px;
+  margin: 15px 0px;
+}
+
+.stats {
+  border-right: 2px solid var(--light-grey)
 }

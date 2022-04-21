@@ -12,7 +12,7 @@ import {
   Spin,
   Skeleton,
 } from "antd";
-import React, { useState } from "react";
+import React from "react";
 import { metadataTemplate } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder.jpg";
 import Icon, {

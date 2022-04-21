@@ -1,9 +1,9 @@
-import { Row, Col, Statistic, Button } from "antd";
-import React, { useState, useEffect, useMemo } from "react";
-import { useMoralis, useNativeBalance } from "react-moralis";
+import { Row, Col, Statistic } from "antd";
+import React from "react";
+import { useNativeBalance } from "react-moralis";
 import { useSNOWBalance } from "../../hooks/useSNOWBalance";
 import { BNTokenValue, tokenValue } from "../../helpers/formatters";
-import { BN, SNOWDecimal } from "../../utils/util";
+import { SNOWDecimal } from "../../utils/util";
 
 export default function WalletDescriptions({
   totalETHDonation,

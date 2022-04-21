@@ -1,41 +1,18 @@
 import { Divider, Typography, Row, Col, Button } from "antd";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import IntroImg from "./img/home-img.jpg";
 import { DollarTwoTone, HeartFilled } from "@ant-design/icons";
 import PetList from "../PetLists";
+import { useGetAdoptablePets } from "../../hooks/useGetAdoptablePets";
 
 const { Title, Paragraph } = Typography;
 
 export default function Home(props) {
-  const pets = props.petsMetadata;
+  const [isLoading, setIsLoading] = useState(true);
+  const props2 = { ...props, setIsLoading };
+  const { adoptablePets } = useGetAdoptablePets(props2);
 
-  const [adoptablePets, setAdoptablePets] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const getAdoptablePets = useCallback(async () => {
-    const adoptableCheck = await Promise.all(
-      pets.map(async (o) => {
-        return props.contracts.adoption
-          .getAdoptionState(o.petID, { from: props.account })
-          .then((bnState) => {
-            return bnState == 1;
-          });
-      })
-    );
-    const _adoptablePets = pets.filter((o, i) => adoptableCheck[i]);
-    setAdoptablePets(_adoptablePets.slice(0, 4));
-    setLoading(false);
-  }, [props.contracts, props.account, pets]);
-
-  useEffect(() => {
-    console.log("Fetching pets metadata");
-    if (
-      props.contracts.adoption &&
-      pets?.length > 0 &&
-      adoptablePets.length == 0
-    )
-      getAdoptablePets();
-  }, [props.contracts.adoption, pets, adoptablePets, getAdoptablePets]);
+  const croppedAdoptable = adoptablePets.slice(0, 4);
 
   return (
     <>
@@ -131,7 +108,7 @@ export default function Home(props) {
             It is time to find them a home!
           </Title>
         </div>
-        <PetList {...props} dataSource={adoptablePets} loading={loading} />
+        <PetList {...props} dataSource={croppedAdoptable} loading={isLoading} />
         <Button
           size="Large"
           className="home-btn"

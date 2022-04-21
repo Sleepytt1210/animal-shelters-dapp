@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import Web3 from "web3";
 
 // Usage: import AdoptionHooks, then const { method } = AdoptionHooks(props);
@@ -17,8 +16,6 @@ export const useDonate = (props) => {
         .catch(console.error);
     } else if (currency == "SNOW") {
       const decimalised = Web3.utils.toWei(amount, "gwei");
-      console.log("Donation address", donation.address);
-      console.log("Account", account);
       return SNOW.approve(donation.address, decimalised, { from: account })
         .then(() =>
           donation.donateSNOW(decimalised, message, {

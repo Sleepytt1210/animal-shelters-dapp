@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import MenuItems from "./components/MenuItems";
 import Home from "./components/Home/Home.jsx";
-// import NativeBalance from "./components/NativeBalance";
 import Account from "./components/Account/Account";
 import { Layout, ConfigProvider, Empty } from "antd";
 import Text from "antd/lib/typography/Text";
@@ -24,6 +23,7 @@ import DonationAbi from "./contracts/Donation.json";
 import Web3 from "web3";
 import { useGetMetadata } from "./hooks/useGetMetadata";
 import UserProfile from "./components/Profile/UserProfile";
+import Statistics from "./components/Statistics/Statistics";
 
 const { Header, Content, Footer } = Layout;
 
@@ -134,7 +134,6 @@ const App = () => {
   }, [web3.web3, web3.provider, account]);
 
   useEffect(() => {
-    console.log("UseEffect called! ");
     if (!web3.web3) initWeb3();
     if (web3.provider && !contracts.SNOW) initContract(web3.provider);
   }, [web3.web3, web3.provider, contracts.SNOW, initWeb3, initContract]);
@@ -169,7 +168,7 @@ const App = () => {
     console.log("Fetching pets from App");
     if (contracts.adoption && petCount && !petsMetadata.length)
       getPetsMetadata();
-  }, [contracts.adoption, petCount, petsMetadata, getPetsMetadata]);
+  }, [contracts.adoption, petCount, getPetsMetadata]);
 
   return (
     <ConfigProvider renderEmpty={empComp}>
@@ -247,10 +246,17 @@ const App = () => {
                   />
                 }
               />
+              <Route
+                path="/statistics"
+                element={
+                  <Statistics
+                    contracts={contracts}
+                    account={account}
+                    petsMetadata={petsMetadata}
+                  />
+                }
+              />
               <Route path="/*" element={<Navigate to="/home" />} />
-              <Route path="/nonauthenticated">
-                <>Please login using the "Authenticate" button</>
-              </Route>
             </Routes>
           </Content>
         </Router>

@@ -1,17 +1,21 @@
+import { useIPFS } from "./useIPFS";
+
 /**
  * This is a hook that loads the NFT metadata in case it doesn't alreay exist
  * If metadata is missing, the object is replaced with a reactive object that updatees when the data becomes available
  * The hook will retry until request is successful (with OpenSea, for now)
  */
 export const useGetMetadata = () => {
+  const { resolveLink } = useIPFS();
   /**
    * Fet Metadata from URI.
    * @param {string} token_uri
    * @returns metadata
    */
   function getMetadataHook(token_uri) {
+    const uri = resolveLink(token_uri);
     //Get the Metadata
-    return getMetadata(token_uri);
+    return getMetadata(uri);
   }
   /**
    *  Get metadata from token URI.

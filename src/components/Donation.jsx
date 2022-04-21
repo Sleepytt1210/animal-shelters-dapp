@@ -44,8 +44,9 @@ export default function Donation(props) {
       "We sincerely appreciate your donation! Your transaction has been recorded in the blockchain.",
   };
 
-  const onFinish = (values) => {
+  const onFinish = async (values) => {
     const amount = BN(values.amount);
+    console.log(amount, values);
     donate(amount, values.currency, values.message, (receipt) => {
       message.success("Submit success!");
       const tx =
@@ -81,15 +82,16 @@ export default function Donation(props) {
             { required: true, message: "Please input donation amount!" },
             {
               type: "number",
-              min: 100,
+              min: 0.001,
               max: 1000000000,
-              message: "Amount must between 100 to 1000000000",
+              message: "Amount must between 0.001 and 1000000000",
             },
           ]}
         >
           <InputNumber
             min={0}
             max={1000000000}
+            step={0.001}
             addonBefore={currency}
             placeholder="1337"
           />

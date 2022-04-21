@@ -1,6 +1,5 @@
-import { useLocation } from "react-router";
 import { Menu } from "antd";
-import { NavLink } from "react-router-dom";
+import { useLocation, NavLink } from "react-router-dom";
 
 function MenuItems() {
   const { pathname } = useLocation();

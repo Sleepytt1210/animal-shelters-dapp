@@ -1,7 +1,20 @@
-import { Image, Table, Button, Space, Tag, Tooltip, Typography } from "antd";
+import {
+  Image,
+  Table,
+  Button,
+  Space,
+  Tag,
+  Tooltip,
+  Typography,
+  Modal,
+  Popconfirm,
+  message,
+  InputNumber,
+} from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
+import PetTemplate from "../Adoption/PetTemplate";
 import { BN, stateToColor, stateToString } from "../../utils/util";
 
 const { Text } = Typography;
@@ -9,7 +22,12 @@ const { Text } = Typography;
 export default function AdoptionHistory(props) {
   const { isAuthenticated, account } = useMoralis();
   const [history, setHistory] = useState(null);
+  const [previewPet, setPreviewPet] = useState({});
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [tipAmount, setTipAmount] = useState(0);
+  const adoption = props.contracts.adoption;
+  const SNOW = props.contracts.SNOW;
 
   const baseFilter = [
     { text: "Pending", value: "Pending" },
@@ -34,6 +52,19 @@ export default function AdoptionHistory(props) {
       defaultSortOrder: "descend",
       sorter: (a, b) => {
         return BN(a.petID) - BN(b.petID);
+      },
+      render: (petID) => {
+        return (
+          <Button
+            type="link"
+            onClick={() => {
+              setPreviewPet(props.petsMetadata[petID]);
+              setIsModalVisible(true);
+            }}
+          >
+            {petID}
+          </Button>
+        );
       },
     },
     {
@@ -71,28 +102,98 @@ export default function AdoptionHistory(props) {
       render: (text, record) =>
         record.status == "Approved" ? (
           <Space size="medium">
-            <Button
-              type="primary"
-              shape="round"
-              id="confirmAdopt"
-              style={{ background: "var(--blue)", borderColor: "var(--blue)" }}
+            <Popconfirm
+              title={
+                <>
+                  <div>
+                    <Text>Are you sure to confirm the adoption?</Text>
+                  </div>
+                  <div>
+                    {"Tips: "}
+                    <InputNumber
+                      size="small"
+                      onChange={setTipAmount}
+                      prefix="SNOW"
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                </>
+              }
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => confirmAdoption(record.petID)}
             >
-              Confirm
-            </Button>
-            <Button
-              type="primary"
-              shape="round"
-              id="cancelAdopt"
-              style={{ background: "red", borderColor: "var(--red)" }}
+              <Button
+                type="primary"
+                shape="round"
+                id="confirmAdopt"
+                style={{
+                  background: "var(--blue)",
+                  borderColor: "var(--blue)",
+                }}
+              >
+                Confirm
+              </Button>
+            </Popconfirm>
+
+            <Popconfirm
+              title="Are you sure to cancel the adoption？"
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => cancelAdoption(record.petID)}
             >
-              Cancel
-            </Button>
+              <Button
+                type="primary"
+                shape="round"
+                id="cancelAdopt"
+                style={{ background: "red", borderColor: "var(--red)" }}
+              >
+                Cancel
+              </Button>
+            </Popconfirm>
           </Space>
         ) : (
           <Text strong>No action</Text>
         ),
     },
   ];
+
+  const checkContracts = () => {
+    if (!adoption || !SNOW) {
+      message.error("Adoption Contract or SNOW contract is not loaded!");
+      return false;
+    }
+    return true;
+  };
+
+  const confirmAdoption = async (petID) => {
+    if (!checkContracts) return;
+    if (tipAmount > 0) {
+      await SNOW.approve(adoption.address, tipAmount);
+    }
+    adoption
+      .confirmAdoption(petID, tipAmount, { from: props.account })
+      .then((result) => {
+        message.success(
+          `Adoption of ${petID} by adopter ${props.account} is confirmed! Transaction hash: ${result.tx}`,
+          5
+        );
+        getEvents();
+      });
+  };
+
+  const cancelAdoption = async (petID) => {
+    if (!checkContracts) return;
+    await adoption
+      .cancelAdoption(petID, { from: props.account })
+      .then((result) => {
+        message.success(
+          `Adoption of ${petID} by adopter ${props.account} is cancelled! Transaction hash: ${result.tx}`,
+          5
+        );
+        getEvents();
+      });
+  };
 
   const getEvents = useCallback(async () => {
     setIsLoading(true);
@@ -182,6 +283,21 @@ export default function AdoptionHistory(props) {
         columns={columns}
         dataSource={history}
       ></Table>
+      <Modal
+        title="Preview Pet Details"
+        centered
+        visible={isModalVisible}
+        onOk={() => setIsModalVisible(false)}
+        onCancel={() => setIsModalVisible(false)}
+        width="100%"
+        className="preview-modal"
+      >
+        <PetTemplate
+          petMetadata={previewPet}
+          isLoading={false}
+          fromNew={true}
+        />
+      </Modal>
     </div>
   );
 }

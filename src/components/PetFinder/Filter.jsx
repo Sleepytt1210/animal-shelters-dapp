@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { Form, Row, Col, Button, Select } from "antd";
 import { sizeOptions } from "../../utils/util";
 
 const { Option, OptGroup } = Select;
 
-function TypeSelector() {
+function TypeSelector({ onTypeChange }) {
   return (
     <Select
       name="petType"
       mode="multiple"
+      onChange={onTypeChange}
       allowClear
       placeholder="Choose a pet"
     >
@@ -89,18 +90,23 @@ function BreedSelector({ breeds }) {
   );
 }
 
-export default function SearchForm({ breeds, ageRange, handleFinish }) {
+export default function SearchForm({
+  breeds,
+  ageRange,
+  handleFinish,
+  handleOnTypeChange,
+}) {
   const [form] = Form.useForm();
 
   const onReset = () => {
     form.resetFields();
   };
 
-  const fields = (breeds, ageRange) => {
+  const fields = (breeds, ageRange, onTypeChange) => {
     return [
       {
         label: "Pet Type",
-        selector: TypeSelector(),
+        selector: TypeSelector({ onTypeChange }),
         name: "petType",
       },
       {
@@ -121,7 +127,7 @@ export default function SearchForm({ breeds, ageRange, handleFinish }) {
     ];
   };
 
-  const fieldComps = fields(breeds, ageRange).map((o) => (
+  const fieldComps = fields(breeds, ageRange, handleOnTypeChange).map((o) => (
     <Col span={8} key={o.label}>
       <Form.Item
         name={o.name}

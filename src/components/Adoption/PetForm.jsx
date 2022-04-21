@@ -95,7 +95,6 @@ function BatchForm({ onBatchFinish, ...props }) {
       setLoading(true);
       return;
     }
-    console.log(e.fileList);
     return e && e.fileList;
   };
 
@@ -185,9 +184,6 @@ function BatchForm({ onBatchFinish, ...props }) {
             itemLayout="vertical"
             size="small"
             pagination={{
-              onChange: (page) => {
-                console.log(page);
-              },
               pageSize: 5,
             }}
             renderItem={(pet) => (
@@ -230,7 +226,6 @@ function SingleForm({ onFinish, petsMetadata, ...props }) {
   };
 
   const onPreview = () => {
-    console.log(form.getFieldsValue());
     props.setVisible(true);
   };
 
@@ -271,7 +266,6 @@ function SingleForm({ onFinish, petsMetadata, ...props }) {
       image.src = imageUrl;
       image.addEventListener("load", () => {
         const { width, height } = image;
-        console.log([width, height]);
         const ratio = width / height;
         if (ratio < 1 || ratio > 4 / 3) {
           message.warn("A 1:1 or 4:3 aspect ratio image is recommended!");
@@ -496,11 +490,12 @@ export default function PetForm(props) {
     onSuccess("Ok");
   };
 
-  const onFinish = async (values, petID) => {
-    const _petID = petID || petCount.toString();
+  const onFinish = async (values, _petID) => {
+    const petID = BN(_petID).toString() || BN(petCount).toString();
     const {
       adoptable: _adoptable,
       img: _img,
+      petID: _id,
       name,
       description,
       uploader: _,
@@ -510,14 +505,14 @@ export default function PetForm(props) {
       const uploadMetadata = async (imgIPFS) => {
         message.success(`Image successfully uploaded to IPFS`);
         const metadata = {
-          petID: _petID,
+          petID: petID,
           name: name,
           description: description,
           img: imgIPFS._ipfs,
           attributes: attributes,
         };
         const metadataIPFS = await uploadFile(
-          _petID,
+          petID,
           btoa(JSON.stringify(metadata)),
           "json",
           (result) => {
@@ -537,7 +532,7 @@ export default function PetForm(props) {
       };
 
       uploadImage(
-        _petID,
+        petID,
         _img.originFileObj,
         typeToExt[_img.type],
         uploadMetadata,

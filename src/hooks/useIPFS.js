@@ -5,7 +5,12 @@ export const useIPFS = () => {
   const { saveFile } = useMoralisFile();
 
   const resolveLink = (url) => {
-    if (!url || !url.includes("ipfs://")) return url;
+    if (!url) return url;
+    else if (url.includes("https://ipfs.moralis.io:2053/"))
+      return url.replace(
+        "https://ipfs.moralis.io:2053/",
+        "https://gateway.moralisipfs.com/"
+      );
     return url.replace("ipfs://", "https://gateway.ipfs.io/ipfs/");
   };
 

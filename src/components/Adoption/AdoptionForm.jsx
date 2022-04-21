@@ -23,7 +23,7 @@ import {
   Result,
 } from "antd";
 import { useParams } from "react-router-dom";
-import { isInteger, SNOWDecimal } from "../../utils/util";
+import { BN, isInteger, SNOWDecimal } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder-square.jpg";
 import { CROptions } from "./AddressOption";
 import { useRequestAdoption } from "../../hooks/useRequestAdoption";
@@ -155,14 +155,16 @@ export default function AdoptionForm(props) {
       const adoptable = await adoption.getAdoptionState(petID, {
         from: props.account,
       });
+      const cleanPetID = BN(petID).toString();
       setValidPet(adoptable == 1 && isInt);
-      const pet = pets[petID];
+      const pet = pets[cleanPetID];
+      console.log(pet);
       setPetmetadata(pet);
-      form.setFieldsValue({
-        petName: pet.name,
-        petBreed: pet.breed,
-        petType: pet.type,
-      });
+      // form.setFieldsValue({
+      //   petName: pet.name,
+      //   petBreed: pet.breed,
+      //   petType: pet.type,
+      // });
       setIsLoading(false);
     }
 

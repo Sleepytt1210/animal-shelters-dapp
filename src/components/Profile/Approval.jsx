@@ -4,9 +4,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import FormReview from "./FormReview";
+import { useGetPetStats } from "../../hooks/useGetPetStats";
 
 export default function Approval(props) {
   const { isAuthenticated, account } = useMoralis();
+  const { adoptionEvents } = useGetPetStats(props);
   const [history, setHistory] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [curTx, setCurTx] = useState({
@@ -97,52 +99,31 @@ export default function Approval(props) {
 
   const getEvents = useCallback(async () => {
     setIsLoading(true);
-    props.contracts.adoption
-      .getPastEvents(
-        "AdoptionStatus",
-        {
-          fromBlock: 0,
-          toBlock: "latest",
-        },
-        (errors) => {
-          if (errors) {
-            console.log("Error in getting past events: ", errors);
-            return;
-          }
-        }
-      )
-      .then((pendingEvents) => {
-        return pendingEvents.reduce((acc, cur) => {
-          // Group events by pet ID and only store the latest event by comparing the block number.
-          const key = cur.returnValues.petID;
-          if (!acc[key] || acc[key].blockNumber < cur.blockNumber) {
-            acc[key] = cur;
-          }
-          return acc;
-        }, {});
-      })
-      .then((events) => {
-        // Get the latest event object that is waiting for approval (in LOCKED/PENDING) state.
-        return Object.entries(events).filter(
-          (o) => o[1].returnValues.status == "2"
-        );
-      })
-      .then((pendingApprovals) => {
-        // Return data needed for table columns
-        return pendingApprovals.map(async (eventTuple) => {
-          const event = eventTuple[1];
-          return {
-            adopter: event.returnValues.adopter,
-            tx: event.transactionHash,
-            petID: event.returnValues.petID,
-          };
-        });
-      })
-      .then(async (fulfilled) => {
-        setHistory(await Promise.all(fulfilled));
-      })
-      .then(() => setIsLoading(false));
-  }, [props.contracts.adoption]);
+
+    const groupedEvents = adoptionEvents.reduce((acc, cur) => {
+      // Group events by pet ID and only store the latest event by comparing the block number.
+      const key = cur.returnValues.petID;
+      if (!acc[key] || acc[key].blockNumber < cur.blockNumber) {
+        acc[key] = cur;
+      }
+      return acc;
+    }, {});
+    // Get the latest event object that is waiting for approval (in LOCKED/PENDING) state.
+    const pendingEvents = Object.entries(groupedEvents).filter(
+      (o) => o[1].returnValues.status == "2"
+    );
+    // Return data needed for table columns
+    const data = pendingEvents.map(async (eventTuple) => {
+      const event = eventTuple[1];
+      return {
+        adopter: event.returnValues.adopter,
+        tx: event.transactionHash,
+        petID: event.returnValues.petID,
+      };
+    });
+    setHistory(await Promise.all(data));
+    setIsLoading(false);
+  }, [adoptionEvents]);
 
   useEffect(() => {
     if (
@@ -150,6 +131,7 @@ export default function Approval(props) {
       isAuthenticated &&
       account &&
       !history &&
+      adoptionEvents.length &&
       props.petsMetadata
     ) {
       getEvents();
@@ -160,6 +142,7 @@ export default function Approval(props) {
     isAuthenticated,
     account,
     props.petsMetadata,
+    adoptionEvents,
     history,
   ]);
 

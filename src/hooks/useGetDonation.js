@@ -1,26 +1,39 @@
 import { useEffect, useState } from "react";
 import { tokenEnum } from "../utils/util";
 
-// Usage: import AdoptionHooks, then const { method } = AdoptionHooks(props);
-export const useGetUserDonation = (props) => {
+export const useGetDonation = (props) => {
   const { donation } = props.contracts;
   const account = props.account;
   const [totalETHDonation, setTotalETHDonation] = useState(0);
   const [totalSNOWDonation, setTotalSNOWDonation] = useState(0);
+  const [userETHDonation, setUserETHDonation] = useState(0);
+  const [userSNOWDonation, setUserSNOWDonation] = useState(0);
   const [donationEvents, setDonationEvents] = useState([]);
 
   useEffect(() => {
-    if (donation && account) getDonation();
+    if (donation && account) getUserDonation();
+    if (donation && account) getTotalDonation();
     if (donation && !donationEvents.length) getPastDonations();
   }, [account, donation, donationEvents]);
 
-  const getDonation = () => {
+  const getUserDonation = () => {
     donation
       .getDonationOfDonor(account, tokenEnum["SNOW"], { from: account })
-      .then(setTotalSNOWDonation)
+      .then(setUserSNOWDonation)
       .catch(console.error);
     donation
       .getDonationOfDonor(account, tokenEnum["ETH"], { from: account })
+      .then(setUserETHDonation)
+      .catch(console.error);
+  };
+
+  const getTotalDonation = () => {
+    donation
+      .getTotalDonation(tokenEnum["SNOW"], { from: account })
+      .then(setTotalSNOWDonation)
+      .catch(console.error);
+    donation
+      .getTotalDonation(tokenEnum["ETH"], { from: account })
       .then(setTotalETHDonation)
       .catch(console.error);
   };
@@ -33,7 +46,10 @@ export const useGetUserDonation = (props) => {
   };
 
   return {
-    getDonation,
+    getUserDonation,
+    getTotalDonation,
+    userETHDonation,
+    userSNOWDonation,
     totalETHDonation,
     totalSNOWDonation,
     donationEvents,
