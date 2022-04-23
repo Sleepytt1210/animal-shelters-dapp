@@ -1,8 +1,18 @@
 import React from "react";
-import { Row, Col, Table, Card, Statistic } from "antd";
+import {
+  Row,
+  Col,
+  Table,
+  Card,
+  Statistic,
+  Button,
+  Divider,
+  Tooltip,
+} from "antd";
 import { useGetDonation } from "../../hooks/useGetDonation";
 import mockDonation from "../../utils/mockDonation.json";
 import TransactionChart from "./TransactionChart";
+import { SyncOutlined } from "@ant-design/icons";
 
 const mockColumns = [
   {
@@ -27,7 +37,9 @@ const mockColumns = [
 ];
 
 export default function Transaction(props) {
-  const { totalETHDonation, totalSNOWDonation } = useGetDonation(props);
+  const { totalETHDonation, totalSNOWDonation, getTotalDonation } =
+    useGetDonation(props);
+  const owner = props.owner;
 
   return (
     <>
@@ -56,7 +68,7 @@ export default function Transaction(props) {
         </Row>
       </Card>
       <Card
-        title="Transactions History of Shelter Wallet"
+        title="Annual Donation by Token Type"
         className="round-card"
         headStyle={{
           borderBottom: "0",
@@ -70,9 +82,33 @@ export default function Transaction(props) {
           <TransactionChart />
         </div>
       </Card>
-      <Card className="round-card" style={{ minHeight: "800px" }}>
+      <Card
+        title="Transactions History of Shelter Wallet"
+        className="round-card"
+        headStyle={{
+          borderBottom: "0",
+          fontSize: "24px",
+          fontWeight: "600",
+          fontFamily: "Nunito",
+        }}
+        style={{ minHeight: "100px" }}
+        extra={
+          <Tooltip title="Reload the data">
+            <Button
+              shape="circle"
+              icon={<SyncOutlined />}
+              onClick={getTotalDonation}
+              style={{ marginBottom: "16px" }}
+            />
+          </Tooltip>
+        }
+      >
         <Table dataSource={mockDonation} columns={mockColumns}></Table>
       </Card>
+      <Divider>Owner's Address</Divider>
+      <Button block style={{ background: "#fff", border: "1px solid black" }}>
+        {owner}
+      </Button>
     </>
   );
 }

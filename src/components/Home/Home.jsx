@@ -113,7 +113,7 @@ export default function Home(props) {
           size="Large"
           className="home-btn"
           style={{
-            marginTop: "10px",
+            marginTop: "25px",
             background: "var(--theme-yellow)",
             border: "3px solid #7D462F",
             borderRadius: "15px",

@@ -24,6 +24,7 @@ import Web3 from "web3";
 import { useGetMetadata } from "./hooks/useGetMetadata";
 import UserProfile from "./components/Profile/UserProfile";
 import Statistics from "./components/Statistics/Statistics";
+import About from "./components/About";
 
 const { Header, Content, Footer } = Layout;
 
@@ -98,7 +99,7 @@ const App = () => {
     const _owner = await SNOW.owner();
     setOwner(_owner.toLowerCase());
     setPetCount(await adoption.pets({ from: account }));
-  });
+  }, []);
 
   const initWeb3 = useCallback(async () => {
     var w3Provider;
@@ -253,16 +254,18 @@ const App = () => {
                     contracts={contracts}
                     account={account}
                     petsMetadata={petsMetadata}
+                    owner={owner}
                   />
                 }
               />
+              <Route path="/about" element={<About />} />
               <Route path="/*" element={<Navigate to="/home" />} />
             </Routes>
           </Content>
         </Router>
         <Footer style={{ textAlign: "center" }}>
           <Text style={{ display: "block" }}>
-            Animal Shelter DApp ©2018 Created by Dylon Wong
+            ShelterNOW DApp ©2022 Created by Dylon Wong
           </Text>
         </Footer>
       </Layout>
@@ -270,7 +273,7 @@ const App = () => {
   );
 };
 
-const Logo = ({ onClick }) => (
+const Logo = () => (
   <div className="logo">
     <a href="/" title="Animal Shelter DApp" className="logo">
       <svg

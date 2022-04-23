@@ -288,3 +288,9 @@ label {
 .stats {
   border-right: 2px solid var(--light-grey)
 }
+
+/* About */
+.ant-row.contact-icons svg:hover {
+  cursor: pointer;
+  color: var(--blue);
+}

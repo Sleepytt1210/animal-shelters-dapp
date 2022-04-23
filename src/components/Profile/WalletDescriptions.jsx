@@ -1,6 +1,5 @@
 import { Row, Col, Statistic } from "antd";
-import React from "react";
-import { useNativeBalance } from "react-moralis";
+import React, { useEffect, useState } from "react";
 import { useSNOWBalance } from "../../hooks/useSNOWBalance";
 import { BNTokenValue, tokenValue } from "../../helpers/formatters";
 import { SNOWDecimal } from "../../utils/util";
@@ -10,8 +9,14 @@ export default function WalletDescriptions({
   totalSNOWDonation,
   ...props
 }) {
-  const { data: nativeBalance, nativeToken } = useNativeBalance();
   const { balance } = useSNOWBalance(props);
+  const [ETHBalance, setETHBalance] = useState(0);
+  const web3 = props.web3.web3;
+
+  useEffect(() => {
+    if (web3 && props.account)
+      web3.eth.getBalance(props.account).then(setETHBalance);
+  }, [web3, props.account]);
 
   return (
     <div className="wallet-desc">
@@ -24,12 +29,7 @@ export default function WalletDescriptions({
       <Row style={{ textAlign: "center" }}>
         <Statistic
           title="ETH Balance"
-          value={
-            (nativeBalance &&
-              nativeToken &&
-              tokenValue(nativeBalance.balance, nativeToken.decimals)) ||
-            0
-          }
+          value={(ETHBalance && tokenValue(ETHBalance, 18).toFixed(4)) || 0}
         />
       </Row>
       <Row gutter={16}>
@@ -46,11 +46,7 @@ export default function WalletDescriptions({
         <Col span={12}>
           <Statistic
             title="Total ETH Donated"
-            value={
-              (totalETHDonation &&
-                tokenValue(totalETHDonation, nativeToken?.decimals || 18)) ||
-              0
-            }
+            value={(totalETHDonation && tokenValue(totalETHDonation, 18)) || 0}
           />
         </Col>
       </Row>

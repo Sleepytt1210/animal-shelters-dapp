@@ -1,5 +1,14 @@
 import React, { useState, useCallback } from "react";
-import { Row, Col, Table, Card, Statistic } from "antd";
+import {
+  Row,
+  Col,
+  Table,
+  Card,
+  Statistic,
+  Button,
+  Divider,
+  Tooltip,
+} from "antd";
 import { useGetPetStats } from "../../hooks/useGetPetStats";
 import PetsStatsChart from "./PetsStatsChart";
 import mockIntake from "../../utils/mockIntake";
@@ -7,11 +16,14 @@ import mockOutcome from "../../utils/mockOutcome";
 import mockPetStats from "../../utils/mockPetStats.json";
 import { stateToString } from "../../utils/util";
 import { getEllipsisTxt } from "../../helpers/formatters";
+import { SyncOutlined } from "@ant-design/icons";
+import { getTxExplorer } from "../../helpers/networks";
 
 export default function PetStats(props) {
-  const { petCount, adoptionEvents } = useGetPetStats(props);
+  const { petCount, adoptionEvents, getAdoptionEvents } = useGetPetStats(props);
   const [totalOutcome, setTotalOutcome] = useState(0);
   const [totalAdopted, setTotalAdopted] = useState(0);
+  const adoption = props.contracts.adoption;
 
   const calculateTotalAdopted = useCallback(() => {
     const outcomeRecords = adoptionEvents.filter(
@@ -24,12 +36,19 @@ export default function PetStats(props) {
     setTotalAdopted(adoptedRecords);
   }, [adoptionEvents]);
 
+  const reload = () => {
+    getAdoptionEvents();
+    calculateTotalAdopted();
+  };
+
   const mockColumns = [
     {
       title: "Transaction Hash",
       dataIndex: "tx",
       key: "tx",
-      render: (tx) => getEllipsisTxt(tx, 10),
+      render: (tx) => (
+        <a href={getTxExplorer("0x539") + tx}>{getEllipsisTxt(tx, 10)}</a>
+      ),
     },
     {
       title: "Date",
@@ -116,9 +135,33 @@ export default function PetStats(props) {
           </Card>
         </Col>
       </Row>
-      <Card className="round-card" style={{ minHeight: "100px" }}>
+      <Card
+        title="Adoption History"
+        className="round-card"
+        headStyle={{
+          borderBottom: "0",
+          fontSize: "24px",
+          fontWeight: "600",
+          fontFamily: "Nunito",
+        }}
+        style={{ minHeight: "100px" }}
+        extra={
+          <Tooltip title="Reload the data">
+            <Button
+              shape="circle"
+              icon={<SyncOutlined />}
+              onClick={reload}
+              style={{ marginBottom: "16px" }}
+            />
+          </Tooltip>
+        }
+      >
         <Table columns={mockColumns} dataSource={mockPetStats} />
       </Card>
+      <Divider>Adoption Contract's Address</Divider>
+      <Button block style={{ background: "#fff", border: "1px solid black" }}>
+        {adoption?.address}
+      </Button>
     </>
   );
 }
