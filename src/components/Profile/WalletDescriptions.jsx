@@ -48,7 +48,7 @@ export default function WalletDescriptions({
             title="Total ETH Donated"
             value={
               (totalETHDonation &&
-                tokenValue(totalETHDonation, nativeToken?.decimals)) ||
+                tokenValue(totalETHDonation, nativeToken?.decimals || 18)) ||
               0
             }
           />

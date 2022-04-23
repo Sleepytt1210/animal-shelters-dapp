@@ -11,7 +11,6 @@ import {
 } from "antd";
 import React, { useState } from "react";
 import { useMoralis } from "react-moralis";
-import { BN } from "../utils/util";
 import { useDonate } from "../hooks/useDonate";
 import SuccessModal from "./SuccessModal";
 
@@ -45,9 +44,7 @@ export default function Donation(props) {
   };
 
   const onFinish = async (values) => {
-    const amount = BN(values.amount);
-    console.log(amount, values);
-    donate(amount, values.currency, values.message, (receipt) => {
+    donate(values.amount, values.currency, values.message.trim(), (receipt) => {
       message.success("Submit success!");
       const tx =
         receipt.tx ||

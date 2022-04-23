@@ -25,6 +25,7 @@ export const networkConfigs = {
     currencyName: "ETH",
     currencySymbol: "ETH",
     rpcUrl: "http://127.0.0.1:7545",
+    blockExplorerUrl: "https://local.etherscan.io/",
   },
   "0xa86a": {
     chainId: 43114,

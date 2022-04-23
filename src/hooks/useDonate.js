@@ -10,12 +10,12 @@ export const useDonate = (props) => {
       return donation
         .donateETH(message, {
           from: account,
-          value: Web3.utils.toWei(amount, "ether"),
+          value: Web3.utils.toWei(amount.toString(), "ether"),
         })
         .then(callback)
         .catch(console.error);
     } else if (currency == "SNOW") {
-      const decimalised = Web3.utils.toWei(amount, "gwei");
+      const decimalised = Web3.utils.toWei(amount.toString(), "gwei");
       return SNOW.approve(donation.address, decimalised, { from: account })
         .then(() =>
           donation.donateSNOW(decimalised, message, {

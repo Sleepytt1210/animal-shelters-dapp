@@ -189,7 +189,6 @@ function Account(props) {
         </Button>
         <Button
           size="large"
-          type="primary"
           style={{
             width: "100%",
             marginTop: "10px",

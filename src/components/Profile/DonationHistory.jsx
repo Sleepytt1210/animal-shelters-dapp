@@ -2,8 +2,12 @@ import { Table, Button, Tooltip } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
-import { tokenEnum } from "../../utils/util";
-import { getEllipsisTxt } from "../../helpers/formatters";
+import { SNOWDecimal, tokenEnum } from "../../utils/util";
+import {
+  getEllipsisTxt,
+  tokenValue,
+  tokenValueTxt,
+} from "../../helpers/formatters";
 
 export default function DonationHistory({ donationEvents, ...props }) {
   const { isAuthenticated, account } = useMoralis();
@@ -25,6 +29,10 @@ export default function DonationHistory({ donationEvents, ...props }) {
       title: "Amount",
       dataIndex: "amount",
       key: "amount",
+      render: (text, record) => {
+        if (record.currency == "ETH") return tokenValue(text, 18);
+        else return tokenValue(text, 9);
+      },
     },
     {
       title: "Message",
