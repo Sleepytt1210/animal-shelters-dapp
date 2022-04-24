@@ -5,10 +5,11 @@ import { useMoralis } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import FormReview from "./FormReview";
 import { useGetPetStats } from "../../hooks/useGetPetStats";
+import { getTxExplorer } from "../../helpers/networks";
 
 export default function Approval(props) {
   const { isAuthenticated, account } = useMoralis();
-  const { adoptionEvents } = useGetPetStats(props);
+  const { adoptionEvents, getAdoptionEvents } = useGetPetStats(props);
   const [history, setHistory] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [curTx, setCurTx] = useState({
@@ -65,7 +66,11 @@ export default function Approval(props) {
       title: "Transaction Hash",
       dataIndex: "tx",
       key: "tx",
-      render: (address) => getEllipsisTxt(address, 8),
+      render: (address) => (
+        <a href={getTxExplorer("0x539") + address}>
+          {getEllipsisTxt(address, 8)}
+        </a>
+      ),
     },
     {
       title: "Pet ID",
@@ -146,6 +151,11 @@ export default function Approval(props) {
     history,
   ]);
 
+  const reload = () => {
+    getAdoptionEvents();
+    getEvents();
+  };
+
   return (
     <>
       <div className="table-content">
@@ -153,11 +163,12 @@ export default function Approval(props) {
           <Button
             shape="circle"
             icon={<SyncOutlined />}
-            onClick={getEvents}
+            onClick={reload}
             style={{ marginBottom: "16px" }}
           />
         </Tooltip>
         <Table
+          bordered
           className="wallet-desc"
           loading={!history || isLoading}
           dataSource={history}

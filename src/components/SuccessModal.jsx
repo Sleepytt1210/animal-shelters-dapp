@@ -11,12 +11,16 @@ export default function SuccessModal({
   width,
   title,
   description,
+  isForceBackHome,
+  setModalVisible,
 }) {
   return (
     <Modal
       visible={visible}
       footer={null}
-      onCancel={() => (window.location = "/home")}
+      onCancel={() =>
+        isForceBackHome ? (window.location = "/home") : setModalVisible(false)
+      }
       bodyStyle={{
         textAlign: "center",
         fontFamily: "Nunito",
@@ -55,8 +59,15 @@ export default function SuccessModal({
           >
             Check in Profile
           </Button>,
-          <Button key="backHome" onClick={() => (window.location = "/home")}>
-            Back to Home
+          <Button
+            key="back"
+            onClick={() =>
+              isForceBackHome
+                ? (window.location = "/home")
+                : setModalVisible(false)
+            }
+          >
+            {isForceBackHome ? "Back to Home" : "Close"}
           </Button>,
         ]}
       />

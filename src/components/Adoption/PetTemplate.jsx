@@ -80,7 +80,7 @@ const definedProps = (obj) => {
 
 const CatIcon = (props) => <Icon component={CatAdopted} {...props} />;
 
-export default function PetTemplate({ petMetadata, fromNew, isLoading }) {
+export default function PetTemplate({ petMetadata, isPreview, isLoading }) {
   const placeHolder = { ...metadataTemplate, ...definedProps(petMetadata) };
   return (
     <Spin spinning={isLoading}>
@@ -184,93 +184,109 @@ export default function PetTemplate({ petMetadata, fromNew, isLoading }) {
           </Card>
         </Col>
       </Row>
-      <Divider style={{ fontFamily: "Fredoka One", fontSize: "20px" }}>
-        Interested in Adoption?
-      </Divider>
-      <Row gutter={30} className="spaced-container">
-        <Col span={24}>
-          <Card className="pet-det-card">
-            <Title>How to adopt:</Title>
+      {!isPreview && (
+        <>
+          <Divider style={{ fontFamily: "Fredoka One", fontSize: "20px" }}>
+            Interested in Adoption?
+          </Divider>
+          <Row gutter={30} className="spaced-container">
+            <Col span={24}>
+              <Card className="pet-det-card">
+                <Title>How to adopt:</Title>
 
-            <Space direction="vertical">
-              <Paragraph>
-                {`Thank you for your interest in rehoming ${petMetadata.name}! Here is what you should know before the adoption:`}
-              </Paragraph>
-              <Timeline>
-                <Timeline.Item dot={<FormOutlined style={{ color: "#000" }} />}>
-                  Step 1. Apply for adoption by filling out a request form. You
-                  will need to pay a deposit first.
-                </Timeline.Item>
-                <Timeline.Item
-                  dot={
-                    <ClockCircleOutlined style={{ color: "var(--amber)" }} />
-                  }
-                >
-                  Step 2. Wait for the animal shelter to review your adoption
-                  request.
-                </Timeline.Item>
-                <Timeline.Item
-                  dot={
-                    <CheckCircleOutlined
-                      style={{ color: "var(--light-green)" }}
-                    />
-                  }
-                >
-                  Step 3. Pick up the pet at the animal shelter.
-                </Timeline.Item>
-                <Timeline.Item
-                  dot={<CatIcon style={{ color: "var(--blue)" }} />}
-                >
-                  Step 4. Get deposit refund and take good care of{" "}
-                  {<Text strong>{petMetadata.name}</Text>}!
-                </Timeline.Item>
-                <Timeline.Item
-                  label=""
-                  dot={
-                    <DollarCircleOutlined style={{ color: "var(--magenta)" }} />
-                  }
-                >
-                  Step 5. (Optional) Tip or Donate to us to support our efforts
-                  in aiding and rescueing the animals!
-                </Timeline.Item>
-              </Timeline>
-            </Space>
-            <Row className="button-row">
-              <Col span={8}>
-                <Button
-                  disabled={fromNew}
-                  className="adoption-btn"
-                  style={{ background: "var(--blue)", border: "var(--blue)" }}
-                  onClick={() =>
-                    (window.location = `/adoptionForm/${petMetadata.petID}`)
-                  }
-                >
-                  Apply for Adoption
-                </Button>
-              </Col>
-              <Col span={8} style={{ textAlign: "center" }}>
-                <Button
-                  disabled={fromNew}
-                  style={{ background: "hotpink", border: "hotpink" }}
-                  className="adoption-btn"
-                >
-                  Donate to ShelterNOW
-                </Button>
-              </Col>
-              <Col span={8} style={{ textAlign: "right" }}>
-                <Button
-                  disabled={fromNew}
-                  style={{ background: "var(--amber)", border: "var(--amber)" }}
-                  className="adoption-btn"
-                  onClick={() => (window.location = "/findpet")}
-                >
-                  See Other Pet
-                </Button>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-      </Row>
+                <Space direction="vertical">
+                  <Paragraph>
+                    {`Thank you for your interest in rehoming ${petMetadata.name}! Here is what you should know before the adoption:`}
+                  </Paragraph>
+                  <Timeline>
+                    <Timeline.Item
+                      dot={<FormOutlined style={{ color: "#000" }} />}
+                    >
+                      Step 1. Apply for adoption by filling out a request form.
+                      You will need to pay a deposit first.
+                    </Timeline.Item>
+                    <Timeline.Item
+                      dot={
+                        <ClockCircleOutlined
+                          style={{ color: "var(--amber)" }}
+                        />
+                      }
+                    >
+                      Step 2. Wait for the animal shelter to review your
+                      adoption request.
+                    </Timeline.Item>
+                    <Timeline.Item
+                      dot={
+                        <CheckCircleOutlined
+                          style={{ color: "var(--light-green)" }}
+                        />
+                      }
+                    >
+                      Step 3. Pick up the pet at the animal shelter.
+                    </Timeline.Item>
+                    <Timeline.Item
+                      dot={<CatIcon style={{ color: "var(--blue)" }} />}
+                    >
+                      Step 4. Get deposit refund and take good care of{" "}
+                      {<Text strong>{petMetadata.name}</Text>}!
+                    </Timeline.Item>
+                    <Timeline.Item
+                      label=""
+                      dot={
+                        <DollarCircleOutlined
+                          style={{ color: "var(--magenta)" }}
+                        />
+                      }
+                    >
+                      Step 5. (Optional) Tip or Donate to us to support our
+                      efforts in aiding and rescueing the animals!
+                    </Timeline.Item>
+                  </Timeline>
+                </Space>
+                <Row className="button-row">
+                  <Col span={8}>
+                    <Button
+                      disabled={isPreview}
+                      className="adoption-btn"
+                      style={{
+                        background: "var(--blue)",
+                        border: "var(--blue)",
+                      }}
+                      onClick={() =>
+                        (window.location = `/adoptionForm/${petMetadata.petID}`)
+                      }
+                    >
+                      Apply for Adoption
+                    </Button>
+                  </Col>
+                  <Col span={8} style={{ textAlign: "center" }}>
+                    <Button
+                      disabled={isPreview}
+                      style={{ background: "hotpink", border: "hotpink" }}
+                      className="adoption-btn"
+                    >
+                      Donate to ShelterNOW
+                    </Button>
+                  </Col>
+                  <Col span={8} style={{ textAlign: "right" }}>
+                    <Button
+                      disabled={isPreview}
+                      style={{
+                        background: "var(--amber)",
+                        border: "var(--amber)",
+                      }}
+                      className="adoption-btn"
+                      onClick={() => (window.location = "/findpet")}
+                    >
+                      See Other Pet
+                    </Button>
+                  </Col>
+                </Row>
+              </Card>
+            </Col>
+          </Row>
+        </>
+      )}
     </Spin>
   );
 }

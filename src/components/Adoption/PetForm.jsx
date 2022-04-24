@@ -14,9 +14,8 @@ import {
   Card,
   Modal,
   message,
-  Col,
-  Row,
   List,
+  Spin,
 } from "antd";
 import { breedOptionGen } from "../PetFinder/Filter";
 import {
@@ -285,203 +284,208 @@ function SingleForm({ onFinish, petsMetadata, ...props }) {
   };
 
   return (
-    <Card className="centered-container-small form-container">
-      <Row>
-        <Col span={18}>
-          <Title style={{ textAlign: "center" }}>New Pet</Title>
-        </Col>
-        <Col>
-          <Button onClick={onFromJSON}>Load from JSON</Button>
-        </Col>
-      </Row>
-      <Form
-        form={form}
-        name="create_new"
-        {...formItemLayout}
-        onFinish={onFinish}
-      >
-        <Form.Item
-          name="name"
-          label="Name"
-          max={20}
-          required
-          rules={[
-            { required: true, message: "Name cannot be left empty!" },
-            { type: "string", max: 20, message: "Name is too long!" },
-          ]}
+    <>
+      <Card className="centered-container-small form-container">
+        <Button onClick={onFromJSON} style={{ float: "left" }}>
+          Load from JSON
+        </Button>
+        <Title style={{ textAlign: "center", marginRight: "132px" }}>
+          New Pet
+        </Title>
+        <Form
+          form={form}
+          name="create_new"
+          {...formItemLayout}
+          onFinish={onFinish}
         >
-          <Input
+          <Form.Item
             name="name"
-            placeholder="Pet's name, e.g. Bailey, Lucky, Chaser"
-          />
-        </Form.Item>
-        <Form.Item
-          name="type"
-          label="Type/Category"
-          rules={[
-            {
-              required: true,
-              message: "Please select the pet's type!",
-            },
-          ]}
-        >
-          <Radio.Group
-            options={typeOptions}
-            optionType="button"
-            onChange={onTypeChange}
-            buttonStyle="solid"
-          />
-        </Form.Item>
-        <Form.Item
-          name="gender"
-          label="Gender"
-          rules={[
-            {
-              required: true,
-              message: "Please select the pet's gender!",
-            },
-          ]}
-        >
-          <Radio.Group
-            options={genderOptions}
-            optionType="button"
-            buttonStyle="solid"
-          />
-        </Form.Item>
-        <Form.Item
-          name="size"
-          label="Size"
-          rules={[
-            {
-              required: true,
-              message: "Please select the pet's size!",
-            },
-          ]}
-        >
-          <Radio.Group
-            options={sizeOptions}
-            optionType="button"
-            buttonStyle="solid"
-          />
-        </Form.Item>
-        <Form.Item
-          name="age"
-          label="Age (Months)"
-          required
-          rules={[
-            { required: true, message: "Please input an age!" },
-            {
-              type: "number",
-              min: 0,
-              max: maxDogAge,
-              message: `Amount must between 0 to ${maxDogAge}`,
-            },
-          ]}
-        >
-          <InputNumber min={0} max={maxDogAge} placeholder="2" />
-        </Form.Item>
-        <Form.Item name="breed" label="Breed" required>
-          <Select
-            showSearch
-            disabled={!form.getFieldValue("type")}
-            placeholder={
-              form.getFieldValue("type")
-                ? "Choose a breed"
-                : "Select a type first!"
-            }
-            filterOption={(input, option) =>
-              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }
-            dropdownRender={(menu) => (
-              <>
-                {menu}
-                <Divider style={{ margin: "8px 0" }} />
-                <Space align="center" style={{ padding: "0 8px 4px" }}>
-                  <Input
-                    placeholder="Please enter item"
-                    value={newBreed}
-                    onChange={onBreedChange}
-                  />
-                  <Typography.Link
-                    onClick={addItem}
-                    style={{ whiteSpace: "nowrap" }}
-                  >
-                    <PlusOutlined /> Add item
-                  </Typography.Link>
-                </Space>
-              </>
-            )}
+            label="Name"
+            max={20}
+            required
+            rules={[
+              { required: true, message: "Name cannot be left empty!" },
+              { type: "string", max: 20, message: "Name is too long!" },
+            ]}
           >
-            {breedOptions}
-          </Select>
-        </Form.Item>
-        <Form.Item
-          name="vaccinated"
-          label="Vaccinated"
-          valuePropName="checked"
-          required
-        >
-          <Checkbox />
-        </Form.Item>
-        <Form.Item
-          name="adoptable"
-          label="Adoptable"
-          valuePropName="checked"
-          required
-        >
-          <Checkbox />
-        </Form.Item>
-        <Form.Item name="description" label="Description" required>
-          <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
-        </Form.Item>
-        <Form.Item name="suggestion" label="Suggestion" required>
-          <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
-        </Form.Item>
-        <Form.Item name="img" label="Upload Image" required>
-          <Upload
-            listType="picture"
-            accept="image/jpeg,image/png"
-            customRequest={props.dummyRequest}
-            beforeUpload={beforeUpload}
-            onChange={normFile}
-            maxCount={1}
+            <Input
+              name="name"
+              placeholder="Pet's name, e.g. Bailey, Lucky, Chaser"
+            />
+          </Form.Item>
+          <Form.Item
+            name="type"
+            label="Type/Category"
+            rules={[
+              {
+                required: true,
+                message: "Please select the pet's type!",
+              },
+            ]}
           >
-            <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />}>
-              Upload Thumbnail
-            </Button>
-          </Upload>
-        </Form.Item>
+            <Radio.Group
+              options={typeOptions}
+              optionType="button"
+              onChange={onTypeChange}
+              buttonStyle="solid"
+            />
+          </Form.Item>
+          <Form.Item
+            name="gender"
+            label="Gender"
+            rules={[
+              {
+                required: true,
+                message: "Please select the pet's gender!",
+              },
+            ]}
+          >
+            <Radio.Group
+              options={genderOptions}
+              optionType="button"
+              buttonStyle="solid"
+            />
+          </Form.Item>
+          <Form.Item
+            name="size"
+            label="Size"
+            rules={[
+              {
+                required: true,
+                message: "Please select the pet's size!",
+              },
+            ]}
+          >
+            <Radio.Group
+              options={sizeOptions}
+              optionType="button"
+              buttonStyle="solid"
+            />
+          </Form.Item>
+          <Form.Item
+            name="age"
+            label="Age (Months)"
+            required
+            rules={[
+              { required: true, message: "Please input an age!" },
+              {
+                type: "number",
+                min: 0,
+                max: maxDogAge,
+                message: `Amount must between 0 to ${maxDogAge}`,
+              },
+            ]}
+          >
+            <InputNumber min={0} max={maxDogAge} placeholder="2" />
+          </Form.Item>
+          <Form.Item name="breed" label="Breed" required>
+            <Select
+              showSearch
+              disabled={!form.getFieldValue("type")}
+              placeholder={
+                form.getFieldValue("type")
+                  ? "Choose a breed"
+                  : "Select a type first!"
+              }
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+              dropdownRender={(menu) => (
+                <>
+                  {menu}
+                  <Divider style={{ margin: "8px 0" }} />
+                  <Space align="center" style={{ padding: "0 8px 4px" }}>
+                    <Input
+                      placeholder="Please enter item"
+                      value={newBreed}
+                      onChange={onBreedChange}
+                    />
+                    <Typography.Link
+                      onClick={addItem}
+                      style={{ whiteSpace: "nowrap" }}
+                    >
+                      <PlusOutlined /> Add item
+                    </Typography.Link>
+                  </Space>
+                </>
+              )}
+            >
+              {breedOptions}
+            </Select>
+          </Form.Item>
+          <Form.Item
+            name="vaccinated"
+            label="Vaccinated"
+            valuePropName="checked"
+            required
+          >
+            <Checkbox />
+          </Form.Item>
+          <Form.Item
+            name="adoptable"
+            label="Adoptable"
+            valuePropName="checked"
+            required
+          >
+            <Checkbox />
+          </Form.Item>
+          <Form.Item name="description" label="Description" required>
+            <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
+          </Form.Item>
+          <Form.Item name="suggestion" label="Suggestion" required>
+            <Input.TextArea showCount rows={4} maxLength={maxDescLength} />
+          </Form.Item>
+          <Form.Item name="img" label="Upload Image" required>
+            <Upload
+              listType="picture"
+              accept="image/jpeg,image/png"
+              customRequest={props.dummyRequest}
+              beforeUpload={beforeUpload}
+              onChange={normFile}
+              maxCount={1}
+            >
+              <Button icon={loading ? <LoadingOutlined /> : <UploadOutlined />}>
+                Upload Thumbnail
+              </Button>
+            </Upload>
+          </Form.Item>
 
-        <Form.Item
-          wrapperCol={{
-            span: 12,
-            offset: 6,
-          }}
-        >
-          <Button onClick={onPreview}>Preview</Button>
-          <Modal
-            title="Preview Pet Details"
-            centered
-            visible={props.visible}
-            onOk={() => props.setVisible(false)}
-            onCancel={() => props.setVisible(false)}
-            width="100%"
-            className="preview-modal"
+          <Form.Item
+            wrapperCol={{
+              span: 12,
+              offset: 6,
+            }}
           >
-            <PetTemplate petMetadata={form.getFieldsValue()} fromNew={true} />
-          </Modal>
-          <Button type="primary" htmlType="submit" style={{ margin: "0 8px" }}>
-            Submit
-          </Button>
-        </Form.Item>
-      </Form>
-    </Card>
+            <Button onClick={onPreview}>Preview</Button>
+            <Modal
+              title="Preview Pet Details"
+              centered
+              visible={props.visible}
+              onOk={() => props.setVisible(false)}
+              onCancel={() => props.setVisible(false)}
+              width="100%"
+              className="preview-modal"
+            >
+              <PetTemplate petMetadata={form.getFieldsValue()} isPreview />
+            </Modal>
+            <Button
+              type="primary"
+              htmlType="submit"
+              style={{ margin: "0 8px" }}
+            >
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
+    </>
   );
 }
 
 export default function PetForm(props) {
   const [visible, setVisible] = useState(false);
   const [fromJSON, setFromJSON] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { uploadImage, uploadFile } = useIPFS();
   const { addPet, petCount } = useAddPet(props);
@@ -546,11 +550,14 @@ export default function PetForm(props) {
     const petID = petCount;
     if (values.thumbnails.length != values.json.length) return false;
     const { thumbnails, json } = values;
+    setIsUploading(true);
     for (const index in json) {
       const pet = json[index];
       pet.img = thumbnails[index];
       await onFinish(pet, petID + BN(index));
     }
+    setIsUploading(false);
+    message.success("All pets uploaded!", 20);
   };
 
   const extendedProps = {
@@ -561,10 +568,12 @@ export default function PetForm(props) {
     setFromJSON: setFromJSON,
     dummyRequest: dummyRequest,
   };
-  return (
-    <>
+  return props.account?.toLowerCase() == props.owner ? (
+    <Spin spinning={isUploading}>
       <SingleForm {...extendedProps} onFinish={onFinish} />
       <BatchForm {...extendedProps} onBatchFinish={onBatchFinish} />
-    </>
+    </Spin>
+  ) : (
+    <Card title="Only the owner can access this page!" />
   );
 }

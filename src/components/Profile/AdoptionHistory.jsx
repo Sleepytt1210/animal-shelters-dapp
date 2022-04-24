@@ -16,6 +16,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
 import PetTemplate from "../Adoption/PetTemplate";
 import { BN, stateToColor, stateToString } from "../../utils/util";
+import { useGetPetStats } from "../../hooks/useGetPetStats";
 
 const { Text } = Typography;
 
@@ -26,6 +27,7 @@ export default function AdoptionHistory(props) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tipAmount, setTipAmount] = useState(0);
+  const { adoptionEvents, getAdoptionEvents } = useGetPetStats(props);
   const adoption = props.contracts.adoption;
   const SNOW = props.contracts.SNOW;
 
@@ -34,22 +36,18 @@ export default function AdoptionHistory(props) {
     { text: "Approved", value: "Approved" },
     { text: "Rejected", value: "Rejected" },
     { text: "Cancelled", value: "Cancelled" },
-    { text: "Confirmed", value: "Confirmed" },
-  ];
-
-  const extendedFilter = [
-    { text: "Added", value: "Added" },
+    { text: "Adopted", value: "Adopted" },
     { text: "Removed", value: "Removed" },
     { text: "Euthanised", value: "Euthanised" },
-    ...baseFilter,
   ];
+
+  const extendedFilter = [{ text: "Added", value: "Added" }, ...baseFilter];
 
   const columns = [
     {
       title: "Pet ID",
       dataIndex: "petID",
       key: "petID",
-      defaultSortOrder: "descend",
       sorter: (a, b) => {
         return BN(a.petID) - BN(b.petID);
       },
@@ -197,40 +195,22 @@ export default function AdoptionHistory(props) {
 
   const getEvents = useCallback(async () => {
     setIsLoading(true);
-    const filteredEvents = await props.contracts.adoption
-      .getPastEvents(
-        "AdoptionStatus",
-        {
-          fromBlock: 0,
-          toBlock: "latest",
-        },
-        (errors) => {
-          if (errors) {
-            console.log("Error in getting past events: ", errors);
-            return;
-          }
-        }
-      )
-      .then((events) => {
-        return events.filter(
-          (o) => o.returnValues.adopter.toLowerCase() == account
-        );
-      })
-      .then((accountEvents) => {
-        return accountEvents.reduce((acc, cur) => {
-          // Group events by pet ID and only store the latest event by comparing the block number.
-          const key = cur.returnValues.petID;
-          if (!acc[key] || acc[key].blockNumber < cur.blockNumber) {
-            acc[key] = cur;
-          }
-          return acc;
-        }, {});
-      });
+    const filteredEvents = adoptionEvents.filter(
+      (o) => o.returnValues.adopter.toLowerCase() == account
+    );
+    const groupedEvents = filteredEvents.reduce((acc, cur) => {
+      // Group events by pet ID and only store the latest event by comparing the block number.
+      const key = cur.returnValues.petID;
+      if (!acc[key] || acc[key].blockNumber < cur.blockNumber) {
+        acc[key] = cur;
+      }
+      return acc;
+    }, {});
 
     // Return data needed for table columns
     const formattedData = await Promise.all(
-      Object.keys(filteredEvents).map(async (petID) => {
-        const event = filteredEvents[petID];
+      Object.keys(groupedEvents).map(async (petID) => {
+        const event = groupedEvents[petID];
         const block = await props.web3.web3.eth.getBlock(event.blockNumber);
         const date = block.timestamp * 1000;
         const image = props.petsMetadata[petID].img;
@@ -240,12 +220,7 @@ export default function AdoptionHistory(props) {
     );
     setHistory(formattedData);
     setIsLoading(false);
-  }, [
-    props.contracts.adoption,
-    account,
-    props.petsMetadata,
-    props.web3.web3.eth,
-  ]);
+  }, [adoptionEvents, account, props.petsMetadata, props.web3.web3.eth]);
 
   useEffect(() => {
     if (
@@ -262,9 +237,14 @@ export default function AdoptionHistory(props) {
     getEvents,
     isAuthenticated,
     account,
-    props.petsMetadata,
     history,
+    props.petsMetadata,
   ]);
+
+  const reload = () => {
+    getAdoptionEvents();
+    getEvents();
+  };
 
   return (
     <div className="table-content">
@@ -272,7 +252,7 @@ export default function AdoptionHistory(props) {
         <Button
           shape="circle"
           icon={<SyncOutlined />}
-          onClick={getEvents}
+          onClick={reload}
           style={{ marginBottom: "16px" }}
         />
       </Tooltip>
@@ -292,11 +272,7 @@ export default function AdoptionHistory(props) {
         width="100%"
         className="preview-modal"
       >
-        <PetTemplate
-          petMetadata={previewPet}
-          isLoading={false}
-          fromNew={true}
-        />
+        <PetTemplate petMetadata={previewPet} isLoading={false} isPreview />
       </Modal>
     </div>
   );

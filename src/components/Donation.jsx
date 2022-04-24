@@ -30,17 +30,18 @@ export default function Donation(props) {
   const [form] = Form.useForm();
   const { donate } = useDonate(props);
   const { chainId } = useMoralis();
-  const [submitted, setSubmitted] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [txHash, setTxHash] = useState("");
 
   const resultProps = {
-    visible: submitted,
+    visible: modalVisible,
     chainId: chainId,
     tx: txHash,
     width: "50%",
     title: "Thank you for your donation!",
     description:
       "We sincerely appreciate your donation! Your transaction has been recorded in the blockchain.",
+    setModalVisible: setModalVisible,
   };
 
   const onFinish = async (values) => {
@@ -51,7 +52,7 @@ export default function Donation(props) {
         receipt?.transactionHash ||
         receipt.receipt?.transactionHash;
       setTxHash(tx);
-      setSubmitted(true);
+      setModalVisible(true);
     });
   };
 

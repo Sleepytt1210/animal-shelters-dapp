@@ -167,9 +167,8 @@ const App = () => {
 
   useEffect(() => {
     console.log("Fetching pets from App");
-    if (contracts.adoption && petCount && !petsMetadata.length)
-      getPetsMetadata();
-  }, [contracts.adoption, petCount, getPetsMetadata]);
+    if (contracts.adoption && petCount) getPetsMetadata();
+  }, [contracts.adoption, petCount]);
 
   return (
     <ConfigProvider renderEmpty={empComp}>
@@ -212,6 +211,7 @@ const App = () => {
                     contracts={contracts}
                     account={account}
                     petsMetadata={petsMetadata}
+                    owner={owner}
                   />
                 }
               />

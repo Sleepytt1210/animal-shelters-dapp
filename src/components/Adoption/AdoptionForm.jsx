@@ -231,7 +231,7 @@ export default function AdoptionForm(props) {
   return (
     <Card className="centered-container-medium form-container">
       <Skeleton loading={isLoading}>
-        <SuccessModal {...resultProps} />
+        <SuccessModal {...resultProps} isForceBackHome />
         <Row wrap={false} style={{ alignItems: "center" }}>
           <Col flex="100px">
             <div onClick={autoFill}>
