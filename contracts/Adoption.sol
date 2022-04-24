@@ -286,6 +286,22 @@ contract Adoption is Ownable, Pet {
     }
 
     /**
+     * @dev Get the temporary adopter of a pet.
+     *
+     * @param petID: The pet ID to be queried.
+     *
+     * @return The temporary adopter.
+     */
+    function getTempAdopterOf(uint256 petID)
+        public
+        view
+        petIDIsValid(petID)
+        returns (address)
+    {
+        return _tempAdopters[petID];
+    }
+
+    /**
      * @dev Get the amount of deposit locked of an adopter.
      *
      * @param adopter: The adopter to query.

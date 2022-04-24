@@ -230,7 +230,7 @@ contract Pet is Context, ERC165, IERC721, IERC721Metadata {
         address from,
         address to,
         uint256 petID,
-        bytes memory _data
+        bytes memory
     ) public override {
         require(
             _isApprovedOrOwner(_msgSender(), petID),
