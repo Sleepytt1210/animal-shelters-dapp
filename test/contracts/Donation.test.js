@@ -1,4 +1,4 @@
-const { SNOWdenomination, tokenTypeToNum } = require("./utils");
+const { SNOWdenomination, tokenTypeToNum } = require("../utilss");
 const Web3 = require("web3");
 const chai = require("chai");
 const truffleAssert = require("truffle-assertions");
@@ -157,6 +157,39 @@ contract("Donation Contract Unit Test", (accounts) => {
     assert.isTrue(
       expectedPersonalDonation.eq(actualPersonalDonation),
       "Personal donation is not equal to the starting personal donation adds the donated amount"
+    );
+  });
+
+  /** REVERTS CHECK **/
+
+  it("should revert on 0 amount donation", async () => {
+    const message = "Good luck";
+    await truffleAssert.fails(
+      donation.donateETH(message, { from: account2, value: "0" }),
+      truffleAssert.ErrorType.REVERT,
+      "cannot be zero",
+      "ETH donation incorrectly passed with amount 0"
+    );
+
+    await truffleAssert.fails(
+      donation.donateSNOW("0", message, { from: account2 }),
+      truffleAssert.ErrorType.REVERT,
+      "cannot be zero",
+      "SNOW donation incorrectly passed with amount 0"
+    );
+  });
+
+  it("should revert on insufficient allowance", async () => {
+    const message = "Good luck";
+    const donateAmount = SNOWdenomination(BN("50000"));
+
+    await snow.approve(donation.address, donateAmount.subn(1));
+
+    await truffleAssert.fails(
+      donation.donateSNOW(donateAmount, message, { from: account2 }),
+      truffleAssert.ErrorType.REVERT,
+      "insufficient allowance",
+      "SNOW donation incorrectly passed with insufficient allowance"
     );
   });
 });

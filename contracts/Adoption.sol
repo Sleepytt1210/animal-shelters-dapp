@@ -165,7 +165,11 @@ contract Adoption is Ownable, Pet {
      * @param adopter: The adopter who applied for adoption.
      * @param petID: The associated pet ID applied for adoption.
      */
-    function rejectAdoption(address adopter, uint256 petID) public onlyOwner {
+    function rejectAdoption(address adopter, uint256 petID)
+        public
+        onlyOwner
+        petIDIsValid(petID)
+    {
         require(
             _petToAdoptionState[petID] == AdoptionState.LOCKED,
             "Not requested for adoption yet!"
@@ -192,7 +196,7 @@ contract Adoption is Ownable, Pet {
         // The pet must be approved.
         require(
             _petToAdoptionState[petID] == AdoptionState.APPROVED,
-            "This pet is not approved for adoption!"
+            "Not approved for adoption!"
         );
 
         require(

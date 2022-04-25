@@ -1,8 +1,8 @@
-const { SNOWdenomination } = require("./utils");
+const { SNOWdenomination } = require("../utils");
 const Web3 = require("web3");
 const chai = require("chai");
 const truffleAssert = require("truffle-assertions");
-const BN = Web3.utils.BN;
+const BN = Web3.utils.toBN;
 const ShelterNOW = artifacts.require("ShelterNOW");
 
 const assert = chai.assert;
@@ -20,7 +20,7 @@ contract("ShelterNOW Contract Unit Test", (accounts) => {
   it("should transfer token and receive token correctly", async () => {
     const account1StartingBalance = await snow.balanceOf(account1);
     const account2StartingBalance = await snow.balanceOf(account2);
-    const transferAmount = SNOWdenomination(new BN(10000));
+    const transferAmount = SNOWdenomination(BN(10000));
 
     const expectedAccount1FinalBalance =
       account1StartingBalance.sub(transferAmount);
@@ -52,8 +52,8 @@ contract("ShelterNOW Contract Unit Test", (accounts) => {
     const owner = account1;
     const spender = account2;
     const startingAllowance = await snow.allowance(owner, spender);
-    const givenAllowance = SNOWdenomination(new BN(20000));
-    const expectedAllowance = SNOWdenomination(new BN(20000));
+    const givenAllowance = SNOWdenomination(BN(20000));
+    const expectedAllowance = SNOWdenomination(BN(20000));
     const result = await snow.approve(spender, givenAllowance, { from: owner });
     const actualAllowance = await snow.allowance(owner, spender);
 
@@ -72,6 +72,18 @@ contract("ShelterNOW Contract Unit Test", (accounts) => {
     assert.isTrue(
       expectedAllowance.eq(actualAllowance),
       "Expected allowance is not equal to the actual allowance"
+    );
+  });
+
+  /** REVERTS CHECK **/
+
+  it("should revert on insufficient balance", async () => {
+    const account2Balance = await snow.balanceOf(account2);
+    truffleAssert.fails(
+      snow.transfer(account1, account2Balance.addn(1), { from: account2 }),
+      truffleAssert.ErrorType.REVERT,
+      "insufficient balance",
+      "ShelterNOW transfer incorrectly passes with insufficient balance"
     );
   });
 });

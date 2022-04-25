@@ -45,8 +45,8 @@ contract Pet is Context, ERC165, IERC721, IERC721Metadata {
      */
     modifier petIDIsValid(uint256 petID) {
         // 4 billion pet id until overload, probably impossible
-        require(petID == uint256(uint32(petID)), "Pet ID overloads!");
-        require(_exists(petID), "ERC721: approved query for nonexistent pet");
+        require(petID == uint256(uint32(petID)), "ERC721: Pet ID overloads!");
+        require(_exists(petID), "ERC721: Query for nonexistent pet");
         _;
     }
 

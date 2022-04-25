@@ -2,7 +2,7 @@ const {
   adoptionStateToNum,
   emptyAddress,
   SNOWdenomination,
-} = require("./utils");
+} = require("../utils");
 const Web3 = require("web3");
 const chai = require("chai");
 const truffleAssert = require("truffle-assertions");
@@ -12,12 +12,22 @@ const ShelterNOW = artifacts.require("ShelterNOW");
 
 const assert = chai.assert;
 
+/**
+ * Pet ID 0 and 1 should be NONAVAIL all time.
+ * Pet ID 2 should be ADOPTED in normal test.
+ * Pet ID 3 should be REJECTED in normal test, ADOPTABLE in the end.
+ * Pet ID 4 should be CANCELLED in normal test, ADOPTABLE in the end.
+ * Pet ID 5 should be LOCKED starting in revert test.
+ * Pet ID 6 should be APPROVED starting in revert test.
+ * Pet ID 7~9 should be ADOPTABLE all time.
+ */
 contract("Adoption Contract Unit Test", (accounts) => {
   let adoption;
   let snow;
 
   const account1 = accounts[0];
   const account2 = accounts[1];
+  const account3 = accounts[2];
   const petCount = 10;
   const tokenURIs = [
     "https://ipfs.moralis.io:2053/ipfs/QmXSNWeHBHaP461RU9yfB7eN5uZ2ARbnnehtLFKu323ZWE",
@@ -32,6 +42,7 @@ contract("Adoption Contract Unit Test", (accounts) => {
     "https://ipfs.moralis.io:2053/ipfs/QmQPVJ4y87zhcaA7Ua2qakeZQ6jt136dnwpVk3PgyAG2in",
   ];
   const adoptionStates = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1];
+  const petIDs = [...Array(petCount).keys()];
 
   let adoptionFee;
   let expectedAdopter;
@@ -317,19 +328,219 @@ contract("Adoption Contract Unit Test", (accounts) => {
     );
   });
 
-  const badPetIDs = [0, 1, 2];
+  /** REVERTS CHECK **/
 
-  badPetIDs.forEach((petID) => {
-    it("should reject a request on a non adoptable pet", async () => {
-      const adoptionStatus = await adoption.getAdoptionState(petID);
-      if (adoptionStatus.toNumber() == 1)
-        this.skip("Skip because adoption status of this pet is ADOPTABLE");
+  describe("Test reverts for add pet method", () => {
+    const badNewStatuses = Object.keys(adoptionStateToNum).filter(
+      (o) => adoptionStateToNum[o] > 1
+    );
+
+    badNewStatuses.forEach((badStatus) => {
+      it(`should revert on adding pet with invalid new status ${badStatus}`, async () => {
+        await truffleAssert.fails(
+          adoption.addPet(
+            "https://www.example.com",
+            adoptionStateToNum[badStatus]
+          ),
+          truffleAssert.ErrorType.REVERT,
+          "Adoption status must be either adoptable or not available",
+          `Add pet transaction passes with invalid status ${badStatus}`
+        );
+      });
+    });
+  });
+
+  describe("Test reverts for request method", () => {
+    before(async () => {
+      await snow.approve(adoption.address, adoptionFee * 2, { from: account2 });
+    });
+
+    // Pet ID Checks
+
+    it("should revert on requesting nonexistent pet ID", async () => {
       await truffleAssert.fails(
-        adoption.requestAdoption(petID, { from: account2 }),
+        adoption.requestAdoption(petCount, { from: account2 }),
         truffleAssert.ErrorType.REVERT,
-        "Not available for adoption",
-        "Request adoption incorrectly passed with non adoptable pet"
+        "ERC721: Query for nonexistent pet",
+        "Request adoption incorrectly passed with nonexistent pet"
       );
+    });
+
+    // Pet Adoption Status Checks
+
+    petIDs.forEach((petID) => {
+      it(`should revert a request on a non adoptable pet, pet ID: ${petID}`, async function () {
+        const adoptionStatus = await adoption.getAdoptionState(petID);
+        if (!adoptionStatus.eqn(adoptionStateToNum["ADOPTABLE"])) {
+          await truffleAssert.fails(
+            adoption.requestAdoption(petID, { from: account2 }),
+            truffleAssert.ErrorType.REVERT,
+            "Not available for adoption",
+            "Request adoption incorrectly passed with non adoptable pet"
+          );
+        } else {
+          this.skip();
+        }
+      });
+    });
+  });
+
+  describe("Test reverts for approve and reject methods", () => {
+    const lockedPet = 5;
+    before(async () => {
+      await adoption.requestAdoption(lockedPet, { from: account2 });
+    });
+
+    // Pet ID Checks
+
+    it("should revert on approving nonexistent pet ID", async () => {
+      await truffleAssert.fails(
+        adoption.approveAdoption(account2, petCount, { from: account1 }),
+        truffleAssert.ErrorType.REVERT,
+        "ERC721: Query for nonexistent pet",
+        "Request adoption incorrectly passed with nonexistent pet"
+      );
+    });
+
+    it("should revert on rejecting nonexistent pet ID", async () => {
+      await truffleAssert.fails(
+        adoption.rejectAdoption(account2, petCount, { from: account1 }),
+        truffleAssert.ErrorType.REVERT,
+        "ERC721: Query for nonexistent pet",
+        "Request adoption incorrectly passed with nonexistent pet"
+      );
+    });
+
+    // Pet Adoption Status Checks
+
+    petIDs.forEach((petID) => {
+      it(`should revert an approval on a non requested pet, pet ID: ${petID}`, async function () {
+        const adoptionStatus = await adoption.getAdoptionState(petID);
+        if (!adoptionStatus.eqn(adoptionStateToNum["LOCKED"])) {
+          await truffleAssert.fails(
+            adoption.approveAdoption(account2, petID, { from: account1 }),
+            truffleAssert.ErrorType.REVERT,
+            "Not requested for adoption yet!",
+            "Approve adoption incorrectly passed with non requested pet"
+          );
+        } else {
+          this.skip();
+        }
+      });
+
+      it(`should revert a rejection on a non requested pet, pet ID: ${petID}`, async function () {
+        const adoptionStatus = await adoption.getAdoptionState(petID);
+        if (!adoptionStatus.eqn(adoptionStateToNum["LOCKED"])) {
+          await truffleAssert.fails(
+            adoption.rejectAdoption(account2, petID, { from: account1 }),
+            truffleAssert.ErrorType.REVERT,
+            "Not requested for adoption yet!",
+            "Reject adoption incorrectly passed with non requested pet"
+          );
+        } else {
+          this.skip();
+        }
+      });
+    });
+
+    // Pet Adopter Matcher Checks
+
+    it("should revert on approving unmatched adopter and pet ID", async () => {
+      await truffleAssert.fails(
+        adoption.approveAdoption(account3, lockedPet, { from: account1 }),
+        truffleAssert.ErrorType.REVERT,
+        "Pet does not match adopter!",
+        "Request adoption incorrectly passed with nonexistent pet"
+      );
+    });
+
+    it("should revert on rejecting unmatched adopter and pet ID", async () => {
+      await truffleAssert.fails(
+        adoption.rejectAdoption(account3, lockedPet, { from: account1 }),
+        truffleAssert.ErrorType.REVERT,
+        "Pet does not match adopter!",
+        "Request adoption incorrectly passed with nonexistent pet"
+      );
+    });
+  });
+
+  describe("Test reverts for confirm and cancel methods", () => {
+    const approvedPet = 6;
+    before(async () => {
+      await adoption.requestAdoption(approvedPet, { from: account2 });
+      await adoption.approveAdoption(account2, approvedPet, { from: account1 });
+    });
+
+    // Pet ID Checks
+
+    it("should revert on confirming nonexistent pet ID", async () => {
+      await truffleAssert.fails(
+        adoption.confirmAdoption(petCount, 0, { from: account2 }),
+        truffleAssert.ErrorType.REVERT,
+        "ERC721: Query for nonexistent pet",
+        "Request adoption incorrectly passed with nonexistent pet"
+      );
+    });
+
+    it("should revert on cancelling nonexistent pet ID", async () => {
+      await truffleAssert.fails(
+        adoption.cancelAdoption(petCount, { from: account2 }),
+        truffleAssert.ErrorType.REVERT,
+        "ERC721: Query for nonexistent pet",
+        "Request adoption incorrectly passed with nonexistent pet"
+      );
+    });
+
+    // Pet Adoption Status Checks
+
+    petIDs.forEach((petID) => {
+      it(`should revert a confirmation on a non approved pet, pet ID: ${petID}`, async function () {
+        const adoptionStatus = await adoption.getAdoptionState(petID);
+        if (!adoptionStatus.eqn(adoptionStateToNum["APPROVED"])) {
+          await truffleAssert.fails(
+            adoption.confirmAdoption(petID, 0, { from: account2 }),
+            truffleAssert.ErrorType.REVERT,
+            "Not approved for adoption!",
+            "Confirm adoption incorrectly passed with non approved pet"
+          );
+        } else {
+          this.skip();
+        }
+      });
+
+      it(`should revert an cancellation on a non approved pet, pet ID: ${petID}`, async function () {
+        const adoptionStatus = await adoption.getAdoptionState(petID);
+        if (!adoptionStatus.eqn(adoptionStateToNum["APPROVED"])) {
+          await truffleAssert.fails(
+            adoption.cancelAdoption(petID, { from: account2 }),
+            truffleAssert.ErrorType.REVERT,
+            "Not approved for adoption!",
+            "Cancel adoption incorrectly passed with non approved pet"
+          );
+        } else {
+          this.skip();
+        }
+      });
+
+      // Pet Adopter Matcher Checks
+
+      it("should revert on confirming unmatched adopter and pet ID", async () => {
+        await truffleAssert.fails(
+          adoption.confirmAdoption(approvedPet, 0, { from: account3 }),
+          truffleAssert.ErrorType.REVERT,
+          "Pet does not match adopter!",
+          "Request adoption incorrectly passed with nonexistent pet"
+        );
+      });
+
+      it("should revert on cancelling unmatched adopter and pet ID", async () => {
+        await truffleAssert.fails(
+          adoption.cancelAdoption(approvedPet, { from: account3 }),
+          truffleAssert.ErrorType.REVERT,
+          "Pet does not match adopter!",
+          "Request adoption incorrectly passed with nonexistent pet"
+        );
+      });
     });
   });
 });
