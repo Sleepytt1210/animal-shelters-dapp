@@ -1,4 +1,8 @@
-const { adoptionStateToNum, emptyAddress } = require("./utils");
+const {
+  adoptionStateToNum,
+  emptyAddress,
+  SNOWdenomination,
+} = require("./utils");
 const Web3 = require("web3");
 const chai = require("chai");
 const truffleAssert = require("truffle-assertions");
@@ -140,7 +144,7 @@ contract("Adoption Contract Unit Test", (accounts) => {
 
   it("should successfully confirm adoption, transfer tip correctly and get deposit refunded", async () => {
     const petID = 2;
-    const tipAmount = new BN(Web3.utils.toWei("1000", "gwei"));
+    const tipAmount = SNOWdenomination(new BN("1000"));
     expectedAdoptionState = adoptionStateToNum["APPROVED"];
     var actualState = await adoption.getAdoptionState(petID);
 
