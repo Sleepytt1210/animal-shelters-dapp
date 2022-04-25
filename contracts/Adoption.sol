@@ -49,7 +49,7 @@ contract Adoption is Ownable, Pet {
     event AdoptionStatus(address adopter, uint256 petID, AdoptionState status);
 
     // An event to notify tips received from adoption fee.
-    event TipsReceived(address adopter, uint256 petID, uint256 amount);
+    event TipsReceived(address adopter, address owner, uint256 amount);
 
     /**
      * @dev Initializes the contract by setting a token contract address to the adoption contract.
@@ -233,18 +233,20 @@ contract Adoption is Ownable, Pet {
         );
 
         address adopter = msg.sender;
+        address owner = owner();
 
         require(_adopterMatches(adopter, petID), "Pet does not match adopter!");
 
         _petToAdoptionState[petID] = AdoptionState.ADOPTED;
         _adopterToDeposit[adopter] -= _adoptionFee;
 
-        safeTransferFrom(owner(), adopter, petID);
+        safeTransferFrom(owner, adopter, petID);
 
         SNOW.transfer(adopter, _adoptionFee);
 
         if (tipAmount > 0) {
-            emit TipsReceived(adopter, petID, tipAmount);
+            SNOW.transferFrom(adopter, owner, tipAmount);
+            emit TipsReceived(adopter, owner, tipAmount);
         }
         emit AdoptionStatus(adopter, petID, AdoptionState.ADOPTED);
     }
@@ -261,12 +263,33 @@ contract Adoption is Ownable, Pet {
     }
 
     /**
+     * @dev Withdraw money from the smart contract if any.
+     */
+    function withdrawSNOW() public onlyOwner {
+        uint256 snowBal = SNOW.balanceOf(address(this));
+        require(
+            snowBal > 0,
+            "Nothing to be withdrawn from the smart contract!"
+        );
+        SNOW.transfer(owner(), snowBal);
+    }
+
+    /**
      * @dev Get the adoption fee of the animal shelter.
      *
      * @return The adoption fee.
      */
     function getAdoptionFee() public view returns (uint256) {
         return _adoptionFee;
+    }
+
+    /**
+     * @dev Get the penalty refund fee of the animal shelter.
+     *
+     * @return The penalty refund fee.
+     */
+    function getPenaltyRefundFee() public view returns (uint256) {
+        return _penaltyRefundFee;
     }
 
     /**
