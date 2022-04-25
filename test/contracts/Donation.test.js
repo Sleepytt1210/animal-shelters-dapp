@@ -1,4 +1,4 @@
-const { SNOWdenomination, tokenTypeToNum } = require("../utilss");
+const { SNOWdenomination, tokenTypeToNum } = require("../utils");
 const Web3 = require("web3");
 const chai = require("chai");
 const truffleAssert = require("truffle-assertions");

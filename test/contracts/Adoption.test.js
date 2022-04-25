@@ -29,20 +29,9 @@ contract("Adoption Contract Unit Test", (accounts) => {
   const account2 = accounts[1];
   const account3 = accounts[2];
   const petCount = 10;
-  const tokenURIs = [
-    "https://ipfs.moralis.io:2053/ipfs/QmXSNWeHBHaP461RU9yfB7eN5uZ2ARbnnehtLFKu323ZWE",
-    "https://ipfs.moralis.io:2053/ipfs/QmZz9VPUB4psEPiZ5DFZsMfwJbosf3GnEyU6ixDvVjWcuu",
-    "https://ipfs.moralis.io:2053/ipfs/QmXQt98FfgttvxEGMhzWpCPsa6Cngdm7taqgE1UJUFogwa",
-    "https://ipfs.moralis.io:2053/ipfs/QmaMgHRpcvxRemYxUAEqRjU7Y6La9d11jnWVoWFJPgcorb",
-    "https://ipfs.moralis.io:2053/ipfs/QmaGhtpdF5J2czJSAyxam4TGBKMg6d5tymdFF1YUS3uHqY",
-    "https://ipfs.moralis.io:2053/ipfs/QmVtwVrDBJcZTb8aQThgfeML29i1yvoZd8V6UPJgvpLUGq",
-    "https://ipfs.moralis.io:2053/ipfs/QmZxmPmM6ojkt18Wn7JojoMumQhySMXosnsjoN3HdbfF8Z",
-    "https://ipfs.moralis.io:2053/ipfs/QmdK1YK5EsV96rRD1e9X5Pn461fHyPQMxoxTsZzwTHerhH",
-    "https://ipfs.moralis.io:2053/ipfs/QmNjoVvrYctmbKtPBUA61FeZXtJ4qL49eWy9JRas22hhwu",
-    "https://ipfs.moralis.io:2053/ipfs/QmQPVJ4y87zhcaA7Ua2qakeZQ6jt136dnwpVk3PgyAG2in",
-  ];
   const adoptionStates = [0, 0, 1, 1, 1, 1, 1, 1, 1, 1];
   const petIDs = [...Array(petCount).keys()];
+  const fakeURI = "https://www.example.com";
 
   let adoptionFee;
   let expectedAdopter;
@@ -58,13 +47,13 @@ contract("Adoption Contract Unit Test", (accounts) => {
     // Initialise account 2 with some funds.
     snow.transfer(account2, adoptionFee * 10, { from: account1 });
 
-    firstResult = await adoption.addPet(tokenURIs[0], adoptionStates[0], {
+    firstResult = await adoption.addPet(fakeURI, adoptionStates[0], {
       from: account1,
     });
 
     // Initiliase pets.
     for (let i = 1; i < petCount; i++) {
-      await adoption.addPet(tokenURIs[i], adoptionStates[i], {
+      await adoption.addPet(fakeURI, adoptionStates[i], {
         from: account1,
       });
     }
@@ -338,10 +327,7 @@ contract("Adoption Contract Unit Test", (accounts) => {
     badNewStatuses.forEach((badStatus) => {
       it(`should revert on adding pet with invalid new status ${badStatus}`, async () => {
         await truffleAssert.fails(
-          adoption.addPet(
-            "https://www.example.com",
-            adoptionStateToNum[badStatus]
-          ),
+          adoption.addPet(fakeURI, adoptionStateToNum[badStatus]),
           truffleAssert.ErrorType.REVERT,
           "Adoption status must be either adoptable or not available",
           `Add pet transaction passes with invalid status ${badStatus}`
