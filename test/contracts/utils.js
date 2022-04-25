@@ -10,3 +10,5 @@ exports.adoptionStateToNum = {
   REMOVED: 8,
   EUTHANISED: 9,
 };
+
+exports.emptyAddress = "0x0000000000000000000000000000000000000000";
