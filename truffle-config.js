@@ -1,4 +1,5 @@
 const path = require("path");
+require("dotenv").config();
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -25,16 +26,6 @@ const path = require("path");
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
-  /**
-   * Networks define how you connect to your ethereum client and let you set the
-   * defaults web3 uses to send transactions. If you don't specify one truffle
-   * will spin up a development blockchain for you on port 9545 when you
-   * run `develop` or `test`. You can ask a truffle command to use a specific
-   * network from the command line, e.g
-   *
-   * $ truffle test --network <network-name>
-   */
-
   networks: {
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
@@ -47,41 +38,24 @@ module.exports = {
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "*", // Any network (default: none)
     },
-    "ganache-cli": {
+    test: {
       host: "127.0.0.1",
       port: 8545,
       network_id: "*",
     },
-    // Another network with more advanced options...
-    // advanced: {
-    // port: 8777,             // Custom port
-    // network_id: 1342,       // Custom network
-    // gas: 8500000,           // Gas sent with each transaction (default: ~6700000)
-    // gasPrice: 20000000000,  // 20 gwei (in wei) (default: 100 gwei)
-    // from: <address>,        // Account to send txs from (default: accounts[0])
-    // websocket: true        // Enable EventEmitter interface for web3 (default: false)
-    // },
-    // Useful for deploying to a public network.
-    // NB: It's important to wrap the provider as a function.
-    // ropsten: {
-    // provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/YOUR-PROJECT-ID`),
-    // network_id: 3,       // Ropsten's id
-    // gas: 5500000,        // Ropsten has a lower block limit than mainnet
-    // confirmations: 2,    // # of confs to wait between deployments. (default: 0)
-    // timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
-    // skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
-    // },
-    // Useful for private networks
-    // private: {
-    // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
-    // network_id: 2111,   // This network is yours, in the cloud.
-    // production: true    // Treats this network as if it was a public net. (default: false)
-    // }
   },
 
   // Set default mocha options here, use special reporters etc.
   mocha: {
-    // timeout: 100000
+    timeout: 100000,
+    reporter: "eth-gas-reporter",
+    reporterOptions: {
+      currency: "USD",
+      coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+      outputFile: "./gas-output/gas-output.txt",
+      noColors: true,
+      excludeContracts: ["Migrations", "Pet"],
+    },
   },
 
   // Configure your compilers
@@ -102,25 +76,4 @@ module.exports = {
 
   plugins: ["truffle-contract-size"],
   contracts_build_directory: path.join(__dirname, "src/contracts"),
-
-  // Truffle DB is currently disabled by default; to enable it, change enabled:
-  // false to enabled: true. The default storage location can also be
-  // overridden by specifying the adapter settings, as shown in the commented code below.
-  //
-  // NOTE: It is not possible to migrate your contracts to truffle DB and you should
-  // make a backup of your artifacts to a safe location before enabling this feature.
-  //
-  // After you backed up your artifacts you can utilize db by running migrate as follows:
-  // $ truffle migrate --reset --compile-all
-  //
-  // db: {
-  // enabled: false,
-  // host: "127.0.0.1",
-  // adapter: {
-  //   name: "sqlite",
-  //   settings: {
-  //     directory: ".db"
-  //   }
-  // }
-  // }
 };
