@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Form,
-  Modal,
   Select,
   Input,
   InputNumber,
@@ -20,18 +19,16 @@ import {
   Empty,
   Skeleton,
   Popconfirm,
-  Result,
 } from "antd";
 import { useParams } from "react-router-dom";
 import { BN, isInteger, SNOWDecimal } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder-square.jpg";
 import { CROptions } from "./AddressOption";
 import { useRequestAdoption } from "../../hooks/useRequestAdoption";
-import { getExplorer } from "../../helpers/networks";
 import { useMoralis, useNewMoralisObject } from "react-moralis";
 import SuccessModal from "../SuccessModal";
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const formItemLayout = {
   labelCol: {
@@ -173,11 +170,11 @@ export default function AdoptionForm(props) {
         setAdoptionFee(fee);
       });
     }
-  }, [pets, petMetadata, petID, adoption, adoptionFee]);
+  }, [props.account, isInt, pets, petMetadata, petID, adoption, adoptionFee]);
 
   useEffect(() => {
     initPet();
-  }, [pets, petMetadata, petID]);
+  }, [pets, petMetadata, petID, initPet]);
 
   const confirm = () => {
     requestAdoption();

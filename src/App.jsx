@@ -76,30 +76,33 @@ const App = () => {
   const [owner, setOwner] = useState("");
   const { getMetadataHook } = useGetMetadata();
 
-  const initContract = useCallback(async (provider) => {
-    console.log("Init contracts called!");
-    const SNOWInstance = contract(ShelterNOWAbi);
-    SNOWInstance.setProvider(provider);
-    const SNOW = await SNOWInstance.deployed();
+  const initContract = useCallback(
+    async (provider) => {
+      console.log("Init contracts called!");
+      const SNOWInstance = contract(ShelterNOWAbi);
+      SNOWInstance.setProvider(provider);
+      const SNOW = await SNOWInstance.deployed();
 
-    const adoptionInstance = contract(AdoptionAbi, SNOWInstance.address);
-    adoptionInstance.setProvider(provider);
-    const adoption = await adoptionInstance.deployed();
+      const adoptionInstance = contract(AdoptionAbi, SNOWInstance.address);
+      adoptionInstance.setProvider(provider);
+      const adoption = await adoptionInstance.deployed();
 
-    const donationInstance = contract(DonationAbi, SNOWInstance.address);
-    donationInstance.setProvider(provider);
-    const donation = await donationInstance.deployed();
+      const donationInstance = contract(DonationAbi, SNOWInstance.address);
+      donationInstance.setProvider(provider);
+      const donation = await donationInstance.deployed();
 
-    setContracts({
-      adoption: adoption,
-      donation: donation,
-      SNOW: SNOW,
-    });
+      setContracts({
+        adoption: adoption,
+        donation: donation,
+        SNOW: SNOW,
+      });
 
-    const _owner = await SNOW.owner();
-    setOwner(_owner.toLowerCase());
-    setPetCount(await adoption.pets({ from: account }));
-  }, []);
+      const _owner = await SNOW.owner();
+      setOwner(_owner.toLowerCase());
+      setPetCount(await adoption.pets({ from: account }));
+    },
+    [account]
+  );
 
   const initWeb3 = useCallback(async () => {
     var w3Provider;
@@ -136,11 +139,15 @@ const App = () => {
 
   useEffect(() => {
     if (!web3.web3) initWeb3();
-    if (web3.provider && !contracts.SNOW) initContract(web3.provider);
-  }, [web3.web3, web3.provider, contracts.SNOW, initWeb3, initContract]);
+  }, [web3.web3, initWeb3]);
+
+  useEffect(() => {
+    if (web3.web3) {
+      initContract(web3.web3.givenProvider);
+    }
+  }, [web3.web3, initContract]);
 
   const getPetsMetadata = useCallback(async () => {
-    console.log("Fetching pets metadata in function");
     const _pets = await Promise.all(
       await contracts.adoption?.pets({ from: account }).then(async (ids) => {
         return ids.map(async (id) => {

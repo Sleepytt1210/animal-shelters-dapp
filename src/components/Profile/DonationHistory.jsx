@@ -2,12 +2,8 @@ import { Table, Button, Tooltip } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
-import { SNOWDecimal, tokenEnum } from "../../utils/util";
-import {
-  getEllipsisTxt,
-  tokenValue,
-  tokenValueTxt,
-} from "../../helpers/formatters";
+import { tokenEnum } from "../../utils/util";
+import { getEllipsisTxt, tokenValue } from "../../helpers/formatters";
 
 export default function DonationHistory({ donationEvents, ...props }) {
   const { isAuthenticated, account } = useMoralis();

@@ -31,7 +31,7 @@ const ExternalLinkOutlined = (props) => {
 export default function FormReview(props) {
   const [details, setDetails] = useState({});
   const { chainId } = useMoralis();
-  const { data, error, isLoading } = useMoralisQuery(
+  const { data, isLoading } = useMoralisQuery(
     "ApplicationForm",
     (query) => {
       query.equalTo("txHash", props.curTx.txHash).find();

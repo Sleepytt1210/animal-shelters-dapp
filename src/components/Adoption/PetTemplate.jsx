@@ -74,7 +74,7 @@ const displayAge = (age) => {
 
 const definedProps = (obj) => {
   return Object.fromEntries(
-    Object.entries(obj).filter(([k, v]) => v !== undefined)
+    Object.entries(obj).filter((o) => o[1] !== undefined)
   );
 };
 

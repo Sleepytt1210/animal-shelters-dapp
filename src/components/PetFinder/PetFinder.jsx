@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Row, Typography } from "antd";
-import SearchForm, { breedOptionGen } from "./Filter";
+import SearchForm from "./Filter";
 import { generateBreedFromData, ageRangeOptions } from "../../utils/util";
 import PetList from "../PetLists";
 import { useGetAdoptablePets } from "../../hooks/useGetAdoptablePets";
