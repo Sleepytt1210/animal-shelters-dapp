@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const output = process.argv.includes("--output");
+
 const report = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../gasReporterOutput.json"), "utf8")
 );
@@ -24,7 +26,15 @@ const calledMethods = Object.values(report.info.methods).filter(
 
 const gasPrice = result.config.gasPrice;
 const ethPrice = result.config.ethPrice;
-const pricePerEthToPerGwei = (price) => parseFloat(price / 1e9).toFixed(2);
+const pricePerEthToPerGwei = (price) => {
+  var res = 0;
+  var decimal = 2;
+  while (res == 0) {
+    res = parseFloat(price / 1e9).toFixed(decimal);
+    decimal++;
+  }
+  return res;
+};
 
 const deployments = report.info.deployments.map((deployment) => {
   return { name: deployment.name, gasData: deployment.gasData };
@@ -76,10 +86,14 @@ const groupedMethods = calculatedMethods.reduce((res, obj) => {
 result.methods = groupedMethods;
 result.deployments = calculatedDeployments;
 
-fs.writeFileSync(
-  path.join(__dirname, "./formatted-gas-output.json"),
-  JSON.stringify(result),
-  "utf8"
-);
-
+if (output) {
+  fs.writeFileSync(
+    path.join(
+      __dirname,
+      `./formatted-gas-output-token-${result.config.token}.json`
+    ),
+    JSON.stringify(result),
+    "utf8"
+  );
+}
 exports.result = result;

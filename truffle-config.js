@@ -1,5 +1,16 @@
 const path = require("path");
 require("dotenv").config();
+
+const tokenArgIdx = process.argv.indexOf("--token");
+const token = tokenArgIdx > 0 ? process.argv[tokenArgIdx + 1] : "ETH";
+const priceApi = {
+  ETH: "https://api.etherscan.io/api?module=proxy&action=eth_gasPrice",
+  BNB: "https://api.bscscan.com/api?module=proxy&action=eth_gasPrice",
+  MATIC: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
+  AVAX: "https://api.snowtrace.io/api?module=proxy&action=eth_gasPrice",
+  HT: "https://api.hecoinfo.com/api?module=proxy&action=eth_gasPrice",
+  MOVR: "https://api-moonriver.moonscan.io/api?module=proxy&action=eth_gasPrice",
+};
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -51,8 +62,10 @@ module.exports = {
     reporter: "eth-gas-reporter",
     reporterOptions: {
       currency: "USD",
+      token: token,
+      gasPriceApi: priceApi[token],
       coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-      outputFile: "./gas-output/gas-output.txt",
+      outputFile: `./gas-output/gas-output-${token}.txt`,
       noColors: true,
       excludeContracts: ["Migrations", "Pet"],
     },

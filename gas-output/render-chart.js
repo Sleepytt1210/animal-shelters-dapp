@@ -18,14 +18,18 @@ module.exports = {
     fs.writeFileSync(
       __dirname +
         "\\plot\\" +
-        title.toLowerCase().replaceAll(" ", "-") +
+        title
+          .toLowerCase()
+          .replaceAll(" ", "-")
+          .replaceAll(":", "")
+          .replaceAll(",", "") +
         ".png",
       imageBuffer,
       { flag: "w" }
     );
   },
 
-  configuration: (title, labels, datasets) => {
+  configuration: (title, labels, datasets, extraOptions) => {
     return {
       type: "bar",
       data: {
@@ -49,6 +53,7 @@ module.exports = {
             },
           },
         },
+        ...extraOptions,
       },
       plugins: [
         {
