@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@ant-design/charts": "^1.3.6",
     "@ant-design/icons": "^4.7.0",
+    "@babel/register": "^7.17.7",
     "@openzeppelin/contracts": "^4.5.0",
     "@testing-library/jest-dom": "^5.16.3",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
-    "@truffle/contract": "^4.5.3",
+    "@truffle/contract": "^4.3.19",
     "@web3auth/web3auth": "^0.8.2",
-    "antd": "^4.19.5",
+    "antd": "^4.20.1",
     "assert": "^2.0.0",
     "chai": "^4.3.6",
     "chart.js": "^3.7.1",
@@ -23,12 +23,13 @@
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "prettier": "^2.6.2",
-    "react": "^17.0.0",
+    "react": "^18.1.0",
     "react-blockies": "^1.4.1",
-    "react-dom": "^17.0.0",
+    "react-chartjs-2": "^4.1.0",
+    "react-dom": "^18.1.0",
     "react-moralis": "^1.3.5",
     "react-router-dom": "^6.3.0",
-    "react-scripts": "^5.0.0",
+    "react-scripts": "^5.0.1",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
     "url": "^0.11.0",
@@ -41,14 +42,29 @@
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
     "devchain": "node devChain.js",
-    "testchain": "nodd devChain.js --test",
-    "gasreport": "node ./gas-output/gas-report.js",
+    "testchain": "node devChain.js --test",
+    "gasreport": "node ./gas-output/gas-report.js --output",
     "plotgas": "node ./gas-output/plot-charts.js",
     "truffle:test": "truffle test --network test",
-    "truffle:test-log": "npm run truffle:test --reporter mochawesome",
-    "truffle:test-gas": "set \"CI=true\" && npm run truffle:test -g \"Testing normal\" --reporter eth-gas-reporter",
+    "truffle:test-log": "npm run truffle:test -- --reporter mochawesome",
+    "truffle:test-gas": "set \"CI=true\" && npm run truffle:test -- --grep \"Testing normal\" --reporter eth-gas-reporter",
     "truffle:debug": "truffle debug",
     "truffle:migrate": "truffle migrate"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^lodash-es$": "lodash",
+      "\\.(css|less|scss)$": "identity-obj-proxy"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!@antv|antd|@ant-design|rc-.+?|@babel/runtime).+(js|jsx|ts|tsx)$"
+    ]
   },
   "eslintConfig": {
     "extends": [
@@ -69,6 +85,9 @@
     ]
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "babel-jest": "^27.5.1",
     "dotenv": "^16.0.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-chai-friendly": "^0.7.2",
@@ -78,6 +97,7 @@
     "mochawesome": "^7.1.3",
     "react-app-rewired": "^2.2.1",
     "truffle-assertions": "^0.9.2",
-    "truffle-contract-size": "^2.0.1"
+    "truffle-contract-size": "^2.0.1",
+    "ts-jest": "^27.1.4"
   }
 }
