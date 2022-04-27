@@ -24,12 +24,14 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Donation, SNOW.address);
   await Donation.deployed();
 
-  for (let i = 0; i < adoptionStates.length; i++) {
-    console.log(`Adding pet ${i}, metadata: ${tokenURIs[i]}`);
-    await adoption.addPet(tokenURIs[i], adoptionStates[i]);
-  }
+  if (network == "development") {
+    for (let i = 0; i < adoptionStates.length; i++) {
+      console.log(`Adding pet ${i}, metadata: ${tokenURIs[i]}`);
+      await adoption.addPet(tokenURIs[i], adoptionStates[i]);
+    }
 
-  console.log("Adding fund to account", accounts[1]);
-  const initialFund = (1e6).toString();
-  await SNOW.transfer(accounts[1], initialFund);
+    console.log("Adding fund to account", accounts[1]);
+    const initialFund = (1e15).toString();
+    await SNOW.transfer(accounts[1], initialFund);
+  }
 };
