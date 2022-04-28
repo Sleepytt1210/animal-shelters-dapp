@@ -11,6 +11,7 @@ import {
 } from "antd";
 import { useGetDonation } from "../../hooks/useGetDonation";
 import mockDonation from "../../utils/mockDonation.json";
+import { tokenValue } from "../../helpers/formatters";
 import TransactionChart from "./TransactionChart";
 import { SyncOutlined } from "@ant-design/icons";
 
@@ -18,7 +19,7 @@ const mockColumns = [
   {
     title: "Date",
     dataIndex: "date",
-    key: "date",
+    key: "txDate",
     defaultSortOrder: "descend",
     sorter: (a, b) => {
       return a.date - b.date;
@@ -46,10 +47,16 @@ export default function Transaction(props) {
       <Card className="round-card" style={{ minHeight: "100px" }}>
         <Row gutter={36}>
           <Col span={6} className="stats">
-            <Statistic title="Total SNOW Donation" value={totalSNOWDonation} />
+            <Statistic
+              title="Total SNOW Donation"
+              value={tokenValue(totalSNOWDonation, 9)}
+            />
           </Col>
           <Col span={6} className="stats">
-            <Statistic title="Total ETH Donation" value={totalETHDonation} />
+            <Statistic
+              title="Total ETH Donation"
+              value={tokenValue(totalETHDonation, 18)}
+            />
           </Col>
           <Col span={6} className="stats">
             <Statistic
@@ -62,7 +69,7 @@ export default function Transaction(props) {
           <Col span={6}>
             <Statistic
               title="Total SNOW Donation Today"
-              value={totalETHDonation}
+              value={tokenValue(totalSNOWDonation, 9)}
             />
           </Col>
         </Row>
@@ -103,7 +110,11 @@ export default function Transaction(props) {
           </Tooltip>
         }
       >
-        <Table dataSource={mockDonation} columns={mockColumns}></Table>
+        <Table
+          dataSource={mockDonation}
+          columns={mockColumns}
+          rowKey="Id"
+        ></Table>
       </Card>
       <Divider>Owner's Address</Divider>
       <Button block style={{ background: "#fff", border: "1px solid black" }}>

@@ -11,7 +11,7 @@ export default function WalletDescriptions({
 }) {
   const { balance } = useSNOWBalance(props);
   const [ETHBalance, setETHBalance] = useState(0);
-  const web3 = props.web3.web3;
+  const web3 = props.web3;
 
   useEffect(() => {
     if (web3 && props.account)

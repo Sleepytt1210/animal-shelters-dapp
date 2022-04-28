@@ -118,15 +118,17 @@ export default function Approval(props) {
       (o) => o[1].returnValues.status == "2"
     );
     // Return data needed for table columns
-    const data = pendingEvents.map(async (eventTuple) => {
-      const event = eventTuple[1];
-      return {
-        adopter: event.returnValues.adopter,
-        tx: event.transactionHash,
-        petID: event.returnValues.petID,
-      };
-    });
-    setHistory(await Promise.all(data));
+    const data = await Promise.all(
+      pendingEvents.map(async (eventTuple) => {
+        const event = eventTuple[1];
+        return {
+          adopter: event.returnValues.adopter,
+          tx: event.transactionHash,
+          petID: event.returnValues.petID,
+        };
+      })
+    );
+    setHistory(data);
     setIsLoading(false);
   }, [adoptionEvents]);
 
@@ -135,8 +137,7 @@ export default function Approval(props) {
       props.contracts.adoption &&
       isAuthenticated &&
       account &&
-      !history &&
-      adoptionEvents.length &&
+      adoptionEvents &&
       props.petsMetadata
     ) {
       getEvents();
@@ -148,7 +149,6 @@ export default function Approval(props) {
     account,
     props.petsMetadata,
     adoptionEvents,
-    history,
   ]);
 
   const reload = () => {

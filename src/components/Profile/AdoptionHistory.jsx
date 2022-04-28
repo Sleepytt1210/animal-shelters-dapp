@@ -211,7 +211,7 @@ export default function AdoptionHistory(props) {
     const formattedData = await Promise.all(
       Object.keys(groupedEvents).map(async (petID) => {
         const event = groupedEvents[petID];
-        const block = await props.web3.web3.eth.getBlock(event.blockNumber);
+        const block = await props.web3.eth.getBlock(event.blockNumber);
         const date = block.timestamp * 1000;
         const image = props.petsMetadata[petID].img;
         const status = stateToString[event.returnValues.status];
@@ -220,24 +220,24 @@ export default function AdoptionHistory(props) {
     );
     setHistory(formattedData);
     setIsLoading(false);
-  }, [adoptionEvents, account, props.petsMetadata, props.web3.web3.eth]);
+  }, [adoptionEvents, account, props.petsMetadata, props.web3]);
 
   useEffect(() => {
     if (
       props.contracts.adoption &&
       isAuthenticated &&
       account &&
-      !history &&
+      adoptionEvents &&
       props.petsMetadata
     ) {
       getEvents();
     }
   }, [
     props.contracts.adoption,
+    adoptionEvents,
     getEvents,
     isAuthenticated,
     account,
-    history,
     props.petsMetadata,
   ]);
 

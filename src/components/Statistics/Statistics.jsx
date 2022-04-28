@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Row, Col, Typography, Radio } from "antd";
 import Transaction from "./Transaction";
 import PetStats from "./Pets";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 export default function Statistics(props) {
   const [isTransactionPage, setIsTransactionPage] = useState(true);

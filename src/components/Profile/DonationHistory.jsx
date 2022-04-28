@@ -57,13 +57,11 @@ export default function DonationHistory({ donationEvents, ...props }) {
     const formattedData = await Promise.all(
       filteredEvents.map(async (event) => {
         const tx = getEllipsisTxt(event.transactionHash, 7);
-        const block = await props.web3.web3.eth.getBlock(event.blockNumber);
+        const block = await props.web3.eth.getBlock(event.blockNumber);
         const date = block.timestamp * 1000;
         const message = event.returnValues.message;
         const amount = event.returnValues.amount;
-        console.log(event.returnValues.tokenType);
         const tokenType = tokenEnum[event.returnValues.tokenType];
-        console.log("Token type", tokenType);
         return {
           tx: tx,
           currency: tokenType,
@@ -75,14 +73,14 @@ export default function DonationHistory({ donationEvents, ...props }) {
     );
     setHistory(formattedData);
     setIsLoading(false);
-  }, [account, donationEvents, props.web3.web3.eth]);
+  }, [account, donationEvents, props.web3]);
 
   useEffect(() => {
     if (
       props.contracts.donation &&
       isAuthenticated &&
       account &&
-      !history &&
+      donationEvents &&
       props.petsMetadata
     ) {
       getEvents();
@@ -94,7 +92,6 @@ export default function DonationHistory({ donationEvents, ...props }) {
     isAuthenticated,
     account,
     props.petsMetadata,
-    history,
   ]);
 
   return (

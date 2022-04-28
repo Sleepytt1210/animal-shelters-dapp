@@ -52,11 +52,11 @@ export default function PetStats(props) {
     },
     {
       title: "Date",
-      dataIndex: "date",
-      key: "date",
+      dataIndex: "petDate",
+      key: "petDate",
       defaultSortOrder: "descend",
       sorter: (a, b) => {
-        return a.date - b.date;
+        return a.petDate - b.petDate;
       },
       render: (date) => new Date(Number(date)).toLocaleDateString("en-GB"),
     },
