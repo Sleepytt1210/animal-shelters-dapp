@@ -9,7 +9,7 @@ export const useAddPet = (props) => {
   useEffect(() => {
     if (adoption && account && props.petsMetadata)
       adoption.totalSupply({ from: account }).then(setPetCount);
-  }, [props.petsMetadata]);
+  }, [props.petsMetadata, account, adoption]);
 
   const addPet = async (tokenURI, adoptionState, callback) => {
     return adoption

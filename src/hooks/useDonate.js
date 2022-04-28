@@ -17,11 +17,11 @@ export const useDonate = (props) => {
     } else if (currency == "SNOW") {
       const decimalised = Web3.utils.toWei(amount.toString(), "gwei");
       return SNOW.approve(donation.address, decimalised, { from: account })
-        .then(() =>
-          donation.donateSNOW(decimalised, message, {
+        .then(() => {
+          return donation.donateSNOW(decimalised, message, {
             from: account,
-          })
-        )
+          });
+        })
         .then(callback)
         .catch(console.error);
     }

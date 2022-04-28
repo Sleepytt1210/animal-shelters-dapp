@@ -59,9 +59,9 @@ export const useGetMetadata = () => {
         } //Handle Opensea's {detail: "Request was throttled. Expected available in 1 second."}
         else {
           //Log
-          console.log("Retrieved Metadata from " + token_uri, {
-            metadata,
-          });
+          // console.log("Retrieved Metadata from " + token_uri, {
+          //   metadata,
+          // });
 
           //Set
           return metadata;

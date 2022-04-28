@@ -14,7 +14,7 @@ export const useGetDonation = (props) => {
     if (donation && account) getUserDonation();
     if (donation && account) getTotalDonation();
     if (donation && !donationEvents.length) getPastDonations();
-  }, [account, donation, donationEvents]);
+  }, [donation, account]);
 
   const getUserDonation = () => {
     donation

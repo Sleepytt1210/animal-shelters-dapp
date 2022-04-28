@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Usage: import AdoptionHooks, then const { method } = AdoptionHooks(props);
 export const useGetPetStats = (props) => {
@@ -10,13 +10,16 @@ export const useGetPetStats = (props) => {
   useEffect(() => {
     if (adoption && account && props.petsMetadata)
       adoption.totalSupply({ from: account }).then(setPetCount);
-  }, [props.petsMetadata]);
+  }, [adoption, account, props.petsMetadata]);
 
   useEffect(() => {
-    if (adoption) getAdoptionEvents();
-  }, []);
+    if (adoption) {
+      getAdoptionEvents();
+    }
+  }, [adoption]);
 
   const getAdoptionEvents = () => {
+    console.log("Adoption Event function called");
     adoption
       .getPastEvents("AdoptionStatus", { fromBlock: 0, toBlock: "latest" })
       .then(setAdoptionEvents);
