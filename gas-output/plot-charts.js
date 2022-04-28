@@ -10,7 +10,7 @@ const inputIdx = sliced.indexOf("--token");
 const isCost = sliced.includes("--cost");
 if (inputIdx < 0 || !isCost) {
   const { result } = require("./gas-report");
-  actualRes = result;
+  actualRes = [result];
 } else {
   token = sliced[inputIdx + 1];
   if (token == "-a") {

@@ -20,7 +20,7 @@ const assert = chai.assert;
  * Pet ID 6 should be APPROVED starting in revert test.
  * Pet ID 7++ should be ADOPTABLE all time.
  */
-contract("Adoption Contract Unit Test", (accounts) => {
+contract("Adoption Contract Unit and Integration Test", (accounts) => {
   let adoption;
   let snow;
 

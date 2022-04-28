@@ -8,7 +8,7 @@ const Donation = artifacts.require("Donation");
 
 const assert = chai.assert;
 
-contract("Donation Contract Unit Test", (accounts) => {
+contract("Donation Contract Unit Test and Integration Test", (accounts) => {
   const account1 = accounts[0];
   const account2 = accounts[1];
 

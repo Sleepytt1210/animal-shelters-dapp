@@ -3,6 +3,9 @@ require("dotenv").config();
 
 const tokenArgIdx = process.argv.indexOf("--token");
 const token = tokenArgIdx > 0 ? process.argv[tokenArgIdx + 1] : "ETH";
+const reporterIdx = process.argv.indexOf("--reporter");
+const reporter = reporterIdx > 0 ? process.argv[reporterIdx + 1] : null;
+
 const priceApi = {
   ETH: "https://api.etherscan.io/api?module=proxy&action=eth_gasPrice",
   BNB: "https://api.bscscan.com/api?module=proxy&action=eth_gasPrice",
@@ -11,6 +14,17 @@ const priceApi = {
   HT: "https://api.hecoinfo.com/api?module=proxy&action=eth_gasPrice",
   MOVR: "https://api-moonriver.moonscan.io/api?module=proxy&action=eth_gasPrice",
 };
+
+const gasReporterOptions = {
+  currency: "USD",
+  token: token,
+  gasPriceApi: priceApi[token],
+  coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+  outputFile: `./gas-output/gas-output-${token}.txt`,
+  noColors: true,
+  excludeContracts: ["Migrations", "Pet"],
+};
+
 /**
  * Use this file to configure your truffle project. It's seeded with some
  * common settings for different networks and features like migrations,
@@ -54,21 +68,18 @@ module.exports = {
       port: 8545,
       network_id: "*",
     },
+    jest: {
+      host: "127.0.0.1",
+      port: 7646,
+      network_id: "*",
+    },
   },
 
   // Set default mocha options here, use special reporters etc.
   mocha: {
     timeout: 100000,
-    reporter: "eth-gas-reporter",
-    reporterOptions: {
-      currency: "USD",
-      token: token,
-      gasPriceApi: priceApi[token],
-      coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-      outputFile: `./gas-output/gas-output-${token}.txt`,
-      noColors: true,
-      excludeContracts: ["Migrations", "Pet"],
-    },
+    reporter: reporter,
+    reporterOptions: reporter === "eth-gas-reporter" && gasReporterOptions,
   },
 
   // Configure your compilers
