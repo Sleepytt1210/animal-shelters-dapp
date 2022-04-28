@@ -24,7 +24,7 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Donation, SNOW.address);
   await Donation.deployed();
 
-  if (network == "development") {
+  if (network == "development" || network == "jest") {
     for (let i = 0; i < adoptionStates.length; i++) {
       console.log(`Adding pet ${i}, metadata: ${tokenURIs[i]}`);
       await adoption.addPet(tokenURIs[i], adoptionStates[i]);

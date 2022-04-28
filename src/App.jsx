@@ -5,6 +5,8 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import Moralis from "moralis";
+import { useMoralis } from "react-moralis";
 import MenuItems from "./components/MenuItems";
 import Home from "./components/Home/Home.jsx";
 import Account from "./components/Account/Account";
@@ -61,10 +63,7 @@ const styles = {
 };
 
 const App = () => {
-  const [web3, setWeb3] = useState({
-    web3: null,
-    provider: null,
-  });
+  const [web3, setWeb3] = useState(null);
   const [contracts, setContracts] = useState({
     adoption: null,
     SNOW: null,
@@ -104,48 +103,43 @@ const App = () => {
     [account]
   );
 
-  const initWeb3 = useCallback(async () => {
-    var w3Provider;
-    if (window.ethereum) {
-      w3Provider = window.ethereum;
+  const {
+    isWeb3Enabled,
+    enableWeb3,
+    isAuthenticated,
+    isWeb3EnableLoading,
+    account: account_,
+  } = useMoralis();
+
+  useEffect(() => {
+    const connectorId = window.localStorage.getItem("connectorId");
+    if (window.ethereum)
       window.ethereum.on("accountsChanged", (accounts) => {
         setAccount(accounts[0]);
       });
-      try {
-        // Request account access
-        await window.ethereum.request({ method: "eth_requestAccounts" });
-      } catch (error) {
-        // User denied account access
-        console.error("User denied account access");
-      }
+    if (
+      isAuthenticated &&
+      ((!isWeb3Enabled && !isWeb3EnableLoading) || !web3)
+    ) {
+      console.log("Initialising web3");
+      const initWeb3 = async () => {
+        await enableWeb3({ provider: connectorId });
+        console.log("Enabling web3", Moralis.provider);
+        setWeb3(new Web3(Moralis.provider));
+      };
+      initWeb3();
     }
-    // legacy dapp browsers
-    else if (window.web3) {
-      w3Provider = window.web3.currentProvider;
-    } else {
-      // If no injected web3 instance is detected, fall back to Ganache.
-      w3Provider = new Web3.providers.HttpProvider("http://localhost:7545");
-    }
-    if (!web3.provider || web3.provider !== w3Provider)
-      setWeb3({ provider: w3Provider });
-    const _web3 = new Web3(w3Provider);
-    if (!web3.web3 || web3.web3 !== _web3) setWeb3({ web3: _web3 });
-    if (!account) {
-      const _account = (await _web3.eth.getAccounts())[0];
-      setAccount(_account);
-    }
-    return _web3;
-  }, [web3.web3, web3.provider, account]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isWeb3Enabled, isWeb3EnableLoading]);
+
+  useEffect(() => setAccount(account_), [account_]);
 
   useEffect(() => {
-    if (!web3.web3) initWeb3();
-  }, [web3.web3, initWeb3]);
-
-  useEffect(() => {
-    if (web3.web3) {
-      initContract(web3.web3.givenProvider);
+    console.log("Web3 Effect", web3);
+    if (web3) {
+      initContract(web3.givenProvider);
     }
-  }, [web3.web3, initContract]);
+  }, [web3]);
 
   const getPetsMetadata = useCallback(async () => {
     const _pets = await Promise.all(
@@ -185,7 +179,6 @@ const App = () => {
             <Logo theme="dark" />
             <MenuItems />
             <div style={styles.headerRight}>
-              {/* <NativeBalance /> */}
               <Account />
             </div>
           </Header>
