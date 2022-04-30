@@ -60,9 +60,7 @@ export default function Donation(props) {
     <Card className="centered-container-small">
       <SuccessModal {...resultProps} />
       <Form form={form} onFinish={onFinish}>
-        <Title level={2} style={{ fontFamily: "Fredoka One" }}>
-          Donation
-        </Title>
+        <Title style={{ fontFamily: "Fredoka One" }}>Donation</Title>
         <Divider />
         <Card className="announcement-wrapper">
           <Paragraph id="announcement">

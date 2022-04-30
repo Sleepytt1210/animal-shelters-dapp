@@ -8,9 +8,7 @@ import { useGetAdoptablePets } from "../../hooks/useGetAdoptablePets";
 const { Title, Paragraph } = Typography;
 
 export default function Home(props) {
-  const [isLoading, setIsLoading] = useState(true);
-  const props2 = { ...props, setIsLoading };
-  const { adoptablePets } = useGetAdoptablePets(props2);
+  const { adoptablePets, isLoading } = useGetAdoptablePets(props);
 
   const croppedAdoptable = adoptablePets.slice(0, 4);
 

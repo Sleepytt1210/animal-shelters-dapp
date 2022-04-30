@@ -5,6 +5,7 @@ export const useGetAdoptablePets = (props) => {
   const account = props.account;
   const pets = props.petsMetadata;
   const [adoptablePets, setAdoptablePets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (adoption && pets?.length > 0 && adoptablePets.length == 0)
@@ -23,11 +24,12 @@ export const useGetAdoptablePets = (props) => {
     );
     const _adoptablePets = pets.filter((o, i) => adoptableCheck[i]);
     setAdoptablePets(_adoptablePets);
-    props.setIsLoading(false);
+    setIsLoading(false);
   };
 
   return {
     getAdoptablePets,
     adoptablePets,
+    isLoading,
   };
 };

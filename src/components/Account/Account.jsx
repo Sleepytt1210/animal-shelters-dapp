@@ -126,6 +126,7 @@ function Account(props) {
     <>
       <div style={styles.account} onClick={() => setIsModalVisible(true)}>
         <span
+          data-testid="auth-text"
           className="auth-text"
           style={{ marginRight: "5px", ...styles.text }}
         >

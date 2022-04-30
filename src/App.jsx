@@ -62,17 +62,19 @@ const styles = {
   },
 };
 
-const App = () => {
-  const [web3, setWeb3] = useState(null);
-  const [contracts, setContracts] = useState({
-    adoption: null,
-    SNOW: null,
-    donation: null,
-  });
-  const [account, setAccount] = useState("");
-  const [petCount, setPetCount] = useState(0);
-  const [petsMetadata, setPetsMetadata] = useState([]);
-  const [owner, setOwner] = useState("");
+const App = (props) => {
+  const [web3, setWeb3] = useState(props.web3 || null);
+  const [contracts, setContracts] = useState(
+    props.contracts || {
+      adoption: null,
+      SNOW: null,
+      donation: null,
+    }
+  );
+  const [account, setAccount] = useState(props.account || "");
+  const [petCount, setPetCount] = useState(props.petCount || 0);
+  const [petsMetadata, setPetsMetadata] = useState(props.petsMetadata || []);
+  const [owner, setOwner] = useState(props.owner || "");
   const { getMetadataHook } = useGetMetadata();
 
   const initContract = useCallback(
@@ -103,13 +105,7 @@ const App = () => {
     [account]
   );
 
-  const {
-    isWeb3Enabled,
-    enableWeb3,
-    isAuthenticated,
-    isWeb3EnableLoading,
-    account: account_,
-  } = useMoralis();
+  const { enableWeb3, isAuthenticated, account: account_ } = useMoralis();
 
   useEffect(() => {
     const connectorId = window.localStorage.getItem("connectorId");
@@ -117,10 +113,7 @@ const App = () => {
       window.ethereum.on("accountsChanged", (accounts) => {
         setAccount(accounts[0]);
       });
-    if (
-      isAuthenticated &&
-      ((!isWeb3Enabled && !isWeb3EnableLoading) || !web3)
-    ) {
+    if (isAuthenticated && !web3) {
       console.log("Initialising web3");
       const initWeb3 = async () => {
         await enableWeb3({ provider: connectorId });
@@ -130,7 +123,7 @@ const App = () => {
       initWeb3();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, isWeb3Enabled, isWeb3EnableLoading]);
+  }, [isAuthenticated]);
 
   useEffect(() => setAccount(account_), [account_]);
 

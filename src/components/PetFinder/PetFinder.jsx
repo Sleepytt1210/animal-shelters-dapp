@@ -12,8 +12,7 @@ export default function PetFinder(props) {
   const [filterResult, setFilterResult] = useState(pets);
   const [breedlist, setBreedlist] = useState([]);
   const [breedOption, setBreedOptions] = useState(breedlist);
-  const [isLoading, setIsLoading] = useState(true);
-  const { adoptablePets } = useGetAdoptablePets({ ...props, setIsLoading });
+  const { adoptablePets, isLoading } = useGetAdoptablePets(props);
 
   function ageFilter(petAge, filterAges) {
     return filterAges.some(
