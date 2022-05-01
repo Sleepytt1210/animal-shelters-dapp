@@ -11,8 +11,6 @@ const routedApp = global.routedApp;
 describe("Pet details component tests", () => {
   let debug_;
   let user;
-  const expectedPage1Names = ["Tabby", "Puff", "Money", "Parker"];
-  const expectedPage2Names = ["Huahua", "Lucky", "Luna", "Tom"];
   const _account = props.account;
   const _petsMetadata = props.petsMetadata.map((pet, idx) => {
     pet.adoptable = idx % 5;
@@ -90,7 +88,6 @@ describe("Pet details component tests", () => {
       );
       const pageDescription = screen.getByTestId("description");
       const pageSuggestion = screen.getByTestId("suggestion");
-      debug_(descCard);
       expect(pageImg).toHaveAttribute("src", img);
       expect(title).toHaveTextContent(name);
       expect(availability).toHaveTextContent(

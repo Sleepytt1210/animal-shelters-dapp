@@ -1,5 +1,9 @@
 import React from "react";
-import { screen, waitFor } from "@testing-library/react";
+import {
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { BrowserRouter } from "react-router-dom";
 import { useMoralis } from "./__mocks__/react-moralis";
@@ -87,7 +91,6 @@ describe("Pet details component tests", () => {
     const message = "Good luck.";
     const expectedAccount = _account;
     const expectedAmount = Web3.utils.toWei(donateAmount, "ether");
-
     // Select the ETH currency
     const currencyList = (await screen.findByRole("combobox")).parentElement;
     await act(async () => {
@@ -106,7 +109,7 @@ describe("Pet details component tests", () => {
     // Donate
     const numberInput = await screen.findByLabelText("Amount");
     const messageInput = screen.getByLabelText("Message");
-    const submitButton = screen.getByText(/submit/i, {
+    const submitButton = screen.getByText(/^submit$/i, {
       selector: "span",
     }).parentElement;
     await user.type(numberInput, donateAmount);
