@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Row,
   Col,
@@ -32,9 +32,15 @@ export default function PetStats(props) {
     const adoptedRecords = outcomeRecords.filter(
       (o) => o.returnValues.status == 4
     );
-    setTotalOutcome(outcomeRecords);
-    setTotalAdopted(adoptedRecords);
+    setTotalOutcome(outcomeRecords.length);
+    setTotalAdopted(adoptedRecords.length);
   }, [adoptionEvents]);
+
+  useEffect(() => {
+    if (adoptionEvents?.length > 0) {
+      calculateTotalAdopted();
+    }
+  }, [adoptionEvents, calculateTotalAdopted]);
 
   const reload = () => {
     getAdoptionEvents();
@@ -58,7 +64,7 @@ export default function PetStats(props) {
       sorter: (a, b) => {
         return a.petDate - b.petDate;
       },
-      render: (date) => new Date(Number(date)).toLocaleDateString("en-GB"),
+      render: (date) => new Date(+date).toLocaleDateString("en-GB"),
     },
     {
       title: "Event",
@@ -102,6 +108,7 @@ export default function PetStats(props) {
       <Row gutter={20}>
         <Col span={12}>
           <Card
+            data-testid="petIntake"
             title="Pet Intake"
             className="round-card"
             headStyle={{
@@ -119,6 +126,7 @@ export default function PetStats(props) {
         </Col>
         <Col span={12}>
           <Card
+            data-testid="petOutcome"
             title="Pet Outcome"
             className="round-card"
             headStyle={{
@@ -136,6 +144,7 @@ export default function PetStats(props) {
         </Col>
       </Row>
       <Card
+        data-testid="txTable"
         title="Adoption History"
         className="round-card"
         headStyle={{

@@ -23,7 +23,9 @@ export default function Statistics(props) {
           </div>
           <Radio.Group onChange={onChange} defaultValue={isTransactionPage}>
             <Radio.Button value={true}>Transactions</Radio.Button>
-            <Radio.Button value={false}>Pets</Radio.Button>
+            <Radio.Button data-testid="pRadio" value={false}>
+              Pets
+            </Radio.Button>
           </Radio.Group>
         </Col>
       </Row>

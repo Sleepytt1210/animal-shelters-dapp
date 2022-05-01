@@ -48,18 +48,21 @@ export default function Transaction(props) {
         <Row gutter={36}>
           <Col span={6} className="stats">
             <Statistic
+              data-testid="overview-stat"
               title="Total SNOW Donation"
               value={tokenValue(totalSNOWDonation, 9)}
             />
           </Col>
           <Col span={6} className="stats">
             <Statistic
+              data-testid="overview-stat"
               title="Total ETH Donation"
               value={tokenValue(totalETHDonation, 18)}
             />
           </Col>
           <Col span={6} className="stats">
             <Statistic
+              data-testid="overview-stat"
               title="SNOW Price in USD"
               value={0.0451}
               precision={4}
@@ -68,6 +71,7 @@ export default function Transaction(props) {
           </Col>
           <Col span={6}>
             <Statistic
+              data-testid="overview-stat"
               title="Total SNOW Donation Today"
               value={tokenValue(totalSNOWDonation, 9)}
             />
@@ -90,6 +94,7 @@ export default function Transaction(props) {
         </div>
       </Card>
       <Card
+        data-testid="txTable"
         title="Transactions History of Shelter Wallet"
         className="round-card"
         headStyle={{

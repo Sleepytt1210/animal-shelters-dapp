@@ -77,6 +77,8 @@ const options = {
 };
 
 const TransactionChart = () => {
-  return <div>{<Bar options={options} data={data} />}</div>;
+  return (
+    <div data-testid="txChart">{<Bar options={options} data={data} />}</div>
+  );
 };
 export default TransactionChart;
