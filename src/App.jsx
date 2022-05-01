@@ -117,7 +117,7 @@ const App = (props) => {
       console.log("Initialising web3");
       const initWeb3 = async () => {
         await enableWeb3({ provider: connectorId });
-        console.log("Enabling web3", Moralis.provider);
+        // console.log("Enabling web3", Moralis.provider);
         setWeb3(new Web3(Moralis.provider));
       };
       initWeb3();
@@ -129,7 +129,7 @@ const App = (props) => {
 
   useEffect(() => {
     console.log("Web3 Effect", web3);
-    if (web3) {
+    if (web3?.givenProvider) {
       initContract(web3.givenProvider);
     }
   }, [web3]);

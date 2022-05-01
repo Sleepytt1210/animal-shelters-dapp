@@ -16,6 +16,7 @@ export default function PetList({ dataSource, loading }) {
   return (
     <Skeleton loading={loading}>
       <div
+        data-testid="petlist"
         style={{
           minWidth: "100%",
           justifyContent: "center",

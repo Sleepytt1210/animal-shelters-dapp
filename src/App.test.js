@@ -1,64 +1,9 @@
 import React from "react";
-require("dotenv").config();
-import { screen, render, fireEvent, renderHook } from "@testing-library/react";
-import App from "./App";
+import { screen, fireEvent } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
-import { MemoryRouter, BrowserRouter } from "react-router-dom";
-import { MoralisProvider } from "react-moralis";
+import { BrowserRouter } from "react-router-dom";
 import { useMoralis } from "./__mocks__/react-moralis";
-
-jest.mock("./hooks/useGetAdoptablePets");
-import { useGetAdoptablePets } from "./hooks/useGetAdoptablePets";
-
-const APP_ID = global.APP_ID;
-const SERVER_URL = global.SERVER_URL;
-
-const props = {
-  web3: jest.fn(),
-  account: "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E",
-  owner: "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E",
-  petsMetadata: require("./utils/sample-data.json"),
-  contracts: {
-    adoption: {
-      address: "0x12345",
-      addPet: jest.fn(),
-      requestAdoption: jest.fn(),
-      approveAdoption: jest.fn(),
-      rejectAdoption: jest.fn(),
-      confirmAdoption: jest.fn(),
-      cancelAdoption: jest.fn(),
-      pets: jest.fn(),
-      tokenURI: jest.fn(),
-      totalSupply: jest.fn(),
-      getAdoptionState: jest.fn(),
-      getPastEvents: jest.fn(),
-    },
-    donation: {
-      address: "0x54321",
-      donateSNOW: jest.fn(),
-      donateETH: jest.fn(),
-      getDonationOfDonor: jest.fn(),
-      getTotalDonation: jest.fn(),
-      getPastEvents: jest.fn(),
-    },
-    SNOW: {
-      address: "0x33333",
-      owner: jest.fn(() => "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E"),
-      approve: jest.fn(() => Promise.resolve()),
-      balanceOf: jest.fn(() => "15000"),
-    },
-  },
-};
-
-const routedApp = (initialPage, appProps) => {
-  return render(
-    <MoralisProvider appId={APP_ID} serverUrl={SERVER_URL}>
-      <MemoryRouter initialEntries={[initialPage]}>
-        <App {...appProps} />
-      </MemoryRouter>
-    </MoralisProvider>
-  );
-};
+const routedApp = global.routedApp;
 
 describe("Test Application Pages", () => {
   const pagesTitle = [
@@ -156,34 +101,5 @@ describe("Test Application Pages", () => {
     });
     const authText = await screen.findByTestId("auth-text");
     expect(authText).toHaveTextContent(addressEllipsis);
-  });
-
-  test("Home should render adoptable pets", async () => {
-    const expectedNames = ["Tabby", "Puff", "Money", "Parker"];
-    useMoralis.mockImplementation(() => ({
-      isAuthenticated: true,
-      account: "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E",
-      enableWeb3: jest.fn(),
-      isWeb3Enabled: true,
-    }));
-    useGetAdoptablePets.mockImplementation(() => ({
-      adoptablePets: props.petsMetadata.filter((o) => o.adoptable == 1),
-      isLoading: false,
-      getAdoptablePets: jest.fn(),
-    }));
-    routedApp("/", {
-      account: "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E",
-      isLoading: false,
-      petsMetadata: props.petsMetadata,
-    });
-    const adoptionRow = await screen.findByText("Adopt a Pet Now!");
-    const petList =
-      adoptionRow.parentElement.parentElement.querySelectorAll(
-        "div.ant-list-item"
-      );
-    expect(petList).toHaveLength(4);
-    petList.forEach((list, idx) => {
-      expect(list).toHaveTextContent(expectedNames[idx]);
-    });
   });
 });

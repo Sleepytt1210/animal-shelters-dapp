@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Row, Typography } from "antd";
 import SearchForm from "./Filter";
 import { generateBreedFromData, ageRangeOptions } from "../../utils/util";
@@ -9,10 +9,10 @@ const { Title } = Typography;
 
 export default function PetFinder(props) {
   const pets = props.petsMetadata;
-  const [filterResult, setFilterResult] = useState(pets);
+  const { adoptablePets, isLoading } = useGetAdoptablePets(props);
+  const [filterResult, setFilterResult] = useState([]);
   const [breedlist, setBreedlist] = useState([]);
   const [breedOption, setBreedOptions] = useState(breedlist);
-  const { adoptablePets, isLoading } = useGetAdoptablePets(props);
 
   function ageFilter(petAge, filterAges) {
     return filterAges.some(
@@ -45,13 +45,13 @@ export default function PetFinder(props) {
   }
 
   useEffect(() => {
-    console.log("Fetching pets metadata");
+    // console.log("Fetching pets metadata");
     if (adoptablePets.length != 0) {
       setFilterResult(adoptablePets);
       setBreedlist(generateBreedFromData(adoptablePets));
       setBreedOptions(generateBreedFromData(adoptablePets));
     }
-  }, [pets, adoptablePets]);
+  }, [adoptablePets]);
 
   return (
     <>
@@ -64,13 +64,14 @@ export default function PetFinder(props) {
           handleOnTypeChange={handleTypeChange}
         />
       </div>
-      <Row
+      <div
+        data-testid="adoption-row"
         className="spaced-container adoption-row"
         style={{ marginTop: "5px", textAlign: "center" }}
       >
         <Title className="adoption-row-title">Results:</Title>
         <PetList dataSource={filterResult} loading={isLoading} />
-      </Row>
+      </div>
     </>
   );
 }

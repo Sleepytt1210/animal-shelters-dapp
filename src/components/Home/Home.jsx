@@ -1,5 +1,5 @@
 import { Divider, Typography, Row, Col, Button } from "antd";
-import React, { useState } from "react";
+import React from "react";
 import IntroImg from "./img/home-img.jpg";
 import { DollarTwoTone, HeartFilled } from "@ant-design/icons";
 import PetList from "../PetLists";
@@ -93,7 +93,7 @@ export default function Home(props) {
           </Col>
         </Row>
       </Row>
-      <Row className="content-row adoption-row">
+      <div data-testid="adoption-row" className="content-row adoption-row">
         <div style={{ marginBottom: "1em" }}>
           <Title className="adoption-row-title">Adopt a Pet Now!</Title>
           <Title
@@ -124,7 +124,7 @@ export default function Home(props) {
         >
           <a href="/findpet">Find More</a>
         </Button>
-      </Row>
+      </div>
     </>
   );
 }
