@@ -29,6 +29,7 @@ global.matchMedia =
 const petsMetadata = require("./utils/sample-data.json");
 const mockGetAdoptionState = (petID) =>
   Promise.resolve(petsMetadata[petID].adoptable);
+const mockApprove = (address, amount) => Promise.resolve();
 
 global.setImmediate = jest.useRealTimers;
 global.ResizeObserver = require("resize-observer-polyfill");
@@ -65,7 +66,7 @@ global.props = {
     SNOW: {
       address: "0x33333",
       owner: jest.fn(() => "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E"),
-      approve: jest.fn(() => Promise.resolve()),
+      approve: mockApprove,
       balanceOf: jest.fn(() => "15000"),
     },
   },

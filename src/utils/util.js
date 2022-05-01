@@ -75,6 +75,13 @@ export const ageRangeOptions = [
   { label: "Over 8 Years", min: 84, max: 999 },
 ];
 
+export const displayAge = (age) => {
+  if (age < 12) {
+    return `${age} months old`;
+  }
+  return `${Math.floor(age / 12)} years old`;
+};
+
 export const stateToString = {
   0: "Not Adoptable",
   1: "Adoptable",

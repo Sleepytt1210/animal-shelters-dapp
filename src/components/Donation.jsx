@@ -48,7 +48,7 @@ export default function Donation(props) {
     donate(values.amount, values.currency, values.message.trim(), (receipt) => {
       message.success("Submit success!");
       const tx =
-        receipt.tx ||
+        receipt?.tx ||
         receipt?.transactionHash ||
         receipt.receipt?.transactionHash;
       setTxHash(tx);

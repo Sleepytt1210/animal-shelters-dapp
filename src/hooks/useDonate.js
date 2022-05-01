@@ -17,8 +17,8 @@ export const useDonate = (props) => {
     } else if (currency == "SNOW") {
       const decimalised = Web3.utils.toWei(amount.toString(), "gwei");
       return SNOW.approve(donation.address, decimalised, { from: account })
-        .then(() => {
-          return donation.donateSNOW(decimalised, message, {
+        .then(async () => {
+          return await donation.donateSNOW(decimalised, message, {
             from: account,
           });
         })

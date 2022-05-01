@@ -16,6 +16,7 @@ export default function SuccessModal({
 }) {
   return (
     <Modal
+      data-testid="result-modal"
       visible={visible}
       footer={null}
       onCancel={() =>
