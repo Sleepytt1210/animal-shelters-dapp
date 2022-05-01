@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export const useGetAdoptablePets = (props) => {
   const adoption = props.contracts.adoption;
@@ -7,15 +7,10 @@ export const useGetAdoptablePets = (props) => {
   const [adoptablePets, setAdoptablePets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (adoption && pets?.length > 0 && adoptablePets.length == 0)
-      getAdoptablePets();
-  }, [adoption, account, pets]);
-
-  const getAdoptablePets = async () => {
+  const getAdoptablePets = useCallback(async () => {
     const adoptableCheck = await Promise.all(
       pets.map(async (o) => {
-        return props.contracts.adoption
+        return adoption
           .getAdoptionState(o.petID, { from: account })
           .then((bnState) => {
             return bnState == 1;
@@ -25,7 +20,11 @@ export const useGetAdoptablePets = (props) => {
     const _adoptablePets = pets.filter((o, i) => adoptableCheck[i]);
     setAdoptablePets(_adoptablePets);
     setIsLoading(false);
-  };
+  }, [account, pets, adoption]);
+
+  useEffect(() => {
+    if (adoption && pets?.length > 0) getAdoptablePets();
+  }, [adoption, pets, getAdoptablePets]);
 
   return {
     getAdoptablePets,
