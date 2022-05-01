@@ -4,6 +4,7 @@ import { act } from "react-dom/test-utils";
 import { BrowserRouter } from "react-router-dom";
 import { useMoralis } from "./__mocks__/react-moralis";
 import userEvent from "@testing-library/user-event";
+import { displayAge } from "./utils/util";
 
 const props = global.props;
 const routedApp = global.routedApp;
@@ -13,7 +14,10 @@ describe("Pet details component tests", () => {
   const expectedPage1Names = ["Tabby", "Puff", "Money", "Parker"];
   const expectedPage2Names = ["Huahua", "Lucky", "Luna", "Tom"];
   const _account = props.account;
-  const _petsMetadata = props.petsMetadata;
+  const _petsMetadata = props.petsMetadata.map((pet, idx) => {
+    pet.adoptable = idx % 5;
+    return pet;
+  });
   const appProp = {
     account: _account,
     petsMetadata: _petsMetadata,
@@ -44,14 +48,69 @@ describe("Pet details component tests", () => {
     }));
   });
 
-  test("Pet details show correct details", async () => {
-    await act(async () => {
-      const { debug: _debug } = await routedApp("/adoptpet/2", appProp);
-      debug_ = _debug;
-    });
-    const imgCard = await screen.findByTestId("imgcard");
-    const descCard = await screen.findByTestId("desccard");
-    debug_(imgCard);
-    debug_(descCard);
-  });
+  // Details order: Name, Age, Gender, Type, Breed, Vaccinated, Descriptions, Suggestion
+  test.each(_petsMetadata)(
+    "Pet details show correct details for $petID: $petName (Adoption state: $adoptable)",
+    async ({
+      petID,
+      name,
+      age,
+      gender,
+      type,
+      breed,
+      vaccinated,
+      description,
+      suggestion,
+      img,
+      adoptable,
+    }) => {
+      const expectedVac = vaccinated ? "check-square" : "close-square";
+      const expectedDetails = [
+        name,
+        displayAge(age),
+        gender,
+        type,
+        breed,
+        expectedVac,
+      ];
+      await act(async () => {
+        const { debug: _debug } = await routedApp(
+          `/adoptpet/${petID}`,
+          appProp
+        );
+        debug_ = _debug;
+      });
+      const imgCard = await screen.findByTestId("imgcard");
+      const pageImg = imgCard.querySelector("img");
+      const title = imgCard.querySelector("h1");
+      const descCard = await screen.findByTestId("desccard");
+      const availability = screen.getByTestId("availability");
+      const detailsList = descCard.querySelectorAll(
+        "div.ant-descriptions-item-container"
+      );
+      const pageDescription = screen.getByTestId("description");
+      const pageSuggestion = screen.getByTestId("suggestion");
+      debug_(descCard);
+      expect(pageImg).toHaveAttribute("src", img);
+      expect(title).toHaveTextContent(name);
+      expect(availability).toHaveTextContent(
+        adoptable == 1 ? "Available" : "Not Available"
+      );
+      detailsList.forEach((detail, idx) => {
+        if (
+          detail.querySelector(".ant-descriptions-item-label").innerHTML !=
+          "Vaccinated"
+        ) {
+          expect(detail).toHaveTextContent(expectedDetails[idx]);
+        } else {
+          expect(detail.querySelector("span.anticon")).toHaveAttribute(
+            "aria-label",
+            expectedDetails[idx]
+          );
+        }
+      });
+      expect(pageDescription).toHaveTextContent(description);
+      expect(pageSuggestion).toHaveTextContent(suggestion);
+    }
+  );
 });

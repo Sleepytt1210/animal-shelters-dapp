@@ -13,7 +13,7 @@ import {
   Skeleton,
 } from "antd";
 import React from "react";
-import { metadataTemplate } from "../../utils/util";
+import { displayAge, metadataTemplate } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder.jpg";
 import Icon, {
   FormOutlined,
@@ -65,13 +65,6 @@ const CatAdopted = () => {
   );
 };
 
-const displayAge = (age) => {
-  if (age < 12) {
-    return `${age} months old`;
-  }
-  return `${Math.floor(age / 12)} years old`;
-};
-
 const definedProps = (obj) => {
   return Object.fromEntries(
     Object.entries(obj).filter((o) => o[1] !== undefined)
@@ -86,7 +79,7 @@ export default function PetTemplate({ petMetadata, isPreview, isLoading }) {
     <Spin spinning={isLoading}>
       <Row gutter={30} className="spaced-container">
         <Col span={7}>
-          <Card className="pet-det-card">
+          <Card className="pet-det-card" data-testid="imgcard">
             <Skeleton loading={isLoading}>
               <Title>{placeHolder.name}</Title>
               {
@@ -99,7 +92,7 @@ export default function PetTemplate({ petMetadata, isPreview, isLoading }) {
           </Card>
         </Col>
         <Col span={17}>
-          <Card className="pet-det-card">
+          <Card className="pet-det-card" data-testid="desccard">
             <Skeleton loading={isLoading} paragraph={{ rows: 6 }}>
               <Descriptions
                 title={
@@ -111,6 +104,7 @@ export default function PetTemplate({ petMetadata, isPreview, isLoading }) {
                 extra={
                   placeHolder.adoptable ? (
                     <Button
+                      data-testid="availability"
                       style={{
                         background: "var(--green)",
                         border: "0",
@@ -124,6 +118,7 @@ export default function PetTemplate({ petMetadata, isPreview, isLoading }) {
                     </Button>
                   ) : (
                     <Button
+                      data-testid="availability"
                       style={{
                         background: "red",
                         border: "0",
@@ -167,18 +162,22 @@ export default function PetTemplate({ petMetadata, isPreview, isLoading }) {
               </Descriptions>
               <Divider />
               <Typography>
-                <Title level={4} className="pet-det-title">
-                  Descriptions
-                </Title>
-                <Paragraph className="pet-det-desc">
-                  {placeHolder.description}
-                </Paragraph>
-                <Title level={4} className="pet-det-title">
-                  Suggestion
-                </Title>
-                <Paragraph className="pet-det-desc">
-                  {placeHolder.suggestion}
-                </Paragraph>
+                <div data-testid="description">
+                  <Title level={4} className="pet-det-title">
+                    Description
+                  </Title>
+                  <Paragraph className="pet-det-desc">
+                    {placeHolder.description}
+                  </Paragraph>
+                </div>
+                <div data-testid="suggestion">
+                  <Title level={4} className="pet-det-title">
+                    Suggestion
+                  </Title>
+                  <Paragraph className="pet-det-desc">
+                    {placeHolder.suggestion}
+                  </Paragraph>
+                </div>
               </Typography>
             </Skeleton>
           </Card>
