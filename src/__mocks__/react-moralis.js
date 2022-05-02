@@ -1,9 +1,9 @@
 module.exports = {
   ...jest.requireActual("react-moralis"),
-  // useMoralisQuery: jest.fn(() => ({
-  //   data: "name",
-  //   isLoading: false,
-  // })),
+  useMoralisQuery: jest.fn(() => ({
+    data: [],
+    isLoading: false,
+  })),
   // useMoralisFile: jest.fn(() => ({
   //   saveFile: jest.fn(() => ({
   //     onSuccess: jest.fn(),

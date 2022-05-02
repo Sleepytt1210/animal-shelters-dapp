@@ -21,7 +21,7 @@ import {
   Popconfirm,
 } from "antd";
 import { useParams } from "react-router-dom";
-import { BN, isInteger, SNOWDecimal } from "../../utils/util";
+import { BN, isInteger, mockData, SNOWDecimal } from "../../utils/util";
 import PlaceHolder from "../../utils/placeholder-square.jpg";
 import { CROptions } from "./AddressOption";
 import { useRequestAdoption } from "../../hooks/useRequestAdoption";
@@ -88,34 +88,6 @@ const tailFormItemLayout = {
       offset: 8,
     },
   },
-};
-
-const mockData = {
-  fname: "Dylon",
-  lname: "Wong",
-  age: 21,
-  address: {
-    street1: "Newcastle 1",
-    street2: "Blandford Square",
-    city: "Newcastle upon Tyne",
-    region: "United Kingdom",
-    code: "NE1 4HZ",
-  },
-  email: "C.Y.D.Wong2@ncl.ac.uk",
-  phone: "07123456789",
-  houseType: "Flat",
-  hasFence: true,
-  fenceHeight: 2,
-  hasOtherPets: true,
-  numberOfPets: 2,
-  friendliness: 5,
-  petConfine:
-    "They will be staying in the courtyard or in the house. I have a pet CCTV at home to monitor their behaviours.",
-  aloneHours: 8,
-  explanation:
-    "I love this pet, she looks very friendly and she can have fun with my other pets. They will be good friends! I also want to help out to improve the animal's wellbeing.",
-  agreement: true,
-  infoCorrect: true,
 };
 
 export default function AdoptionForm(props) {

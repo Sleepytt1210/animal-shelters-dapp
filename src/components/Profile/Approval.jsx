@@ -168,6 +168,7 @@ export default function Approval(props) {
           />
         </Tooltip>
         <Table
+          data-testid="approvalTable"
           bordered
           className="wallet-desc"
           loading={!history || isLoading}

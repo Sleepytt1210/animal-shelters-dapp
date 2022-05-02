@@ -2,14 +2,12 @@ import { Row, Col, Statistic } from "antd";
 import React, { useEffect, useState } from "react";
 import { useSNOWBalance } from "../../hooks/useSNOWBalance";
 import { BNTokenValue, tokenValue } from "../../helpers/formatters";
-import { SNOWDecimal } from "../../utils/util";
+import { BN, SNOWDecimal } from "../../utils/util";
+import { useGetDonation } from "../../hooks/useGetDonation";
 
-export default function WalletDescriptions({
-  totalETHDonation,
-  totalSNOWDonation,
-  ...props
-}) {
+export default function WalletDescriptions(props) {
   const { balance } = useSNOWBalance(props);
+  const { userSNOWDonation, userETHDonation } = useGetDonation(props);
   const [ETHBalance, setETHBalance] = useState(0);
   const web3 = props.web3;
 
@@ -37,8 +35,8 @@ export default function WalletDescriptions({
           <Statistic
             title="Total SNOW Donated"
             value={
-              (totalSNOWDonation &&
-                BNTokenValue(totalSNOWDonation, SNOWDecimal)) ||
+              (userSNOWDonation &&
+                BNTokenValue(userSNOWDonation, SNOWDecimal)) ||
               0
             }
           />
@@ -46,7 +44,9 @@ export default function WalletDescriptions({
         <Col span={12}>
           <Statistic
             title="Total ETH Donated"
-            value={(totalETHDonation && tokenValue(totalETHDonation, 18)) || 0}
+            value={
+              (userETHDonation && BNTokenValue(userETHDonation, BN(1e18))) || 0
+            }
           />
         </Col>
       </Row>

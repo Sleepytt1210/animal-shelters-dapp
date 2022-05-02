@@ -9,6 +9,7 @@ export const useGetDonation = (props) => {
   const [userETHDonation, setUserETHDonation] = useState(0);
   const [userSNOWDonation, setUserSNOWDonation] = useState(0);
   const [donationEvents, setDonationEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (donation && account) getUserDonation();
@@ -17,6 +18,7 @@ export const useGetDonation = (props) => {
   }, [donation, account]);
 
   const getUserDonation = () => {
+    setIsLoading(true);
     donation
       .getDonationOfDonor(account, tokenEnum["SNOW"], { from: account })
       .then(setUserSNOWDonation)
@@ -25,9 +27,11 @@ export const useGetDonation = (props) => {
       .getDonationOfDonor(account, tokenEnum["ETH"], { from: account })
       .then(setUserETHDonation)
       .catch(console.error);
+    setIsLoading(false);
   };
 
   const getTotalDonation = () => {
+    setIsLoading(true);
     donation
       .getTotalDonation(tokenEnum["SNOW"], { from: account })
       .then(setTotalSNOWDonation)
@@ -36,22 +40,27 @@ export const useGetDonation = (props) => {
       .getTotalDonation(tokenEnum["ETH"], { from: account })
       .then(setTotalETHDonation)
       .catch(console.error);
+    setIsLoading(false);
   };
 
   const getPastDonations = () => {
+    setIsLoading(true);
     donation
       .getPastEvents("Donate", { fromBlock: 0, toBlock: "latest" })
       .then(setDonationEvents)
       .catch(console.error);
+    setIsLoading(false);
   };
 
   return {
     getUserDonation,
     getTotalDonation,
+    getPastDonations,
     userETHDonation,
     userSNOWDonation,
     totalETHDonation,
     totalSNOWDonation,
     donationEvents,
+    isLoading,
   };
 };

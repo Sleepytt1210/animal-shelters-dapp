@@ -196,7 +196,7 @@ export default function AdoptionHistory(props) {
   const getEvents = useCallback(async () => {
     setIsLoading(true);
     const filteredEvents = adoptionEvents.filter(
-      (o) => o.returnValues.adopter.toLowerCase() == account
+      (o) => o.returnValues.adopter.toLowerCase() == account.toLowerCase()
     );
     const groupedEvents = filteredEvents.reduce((acc, cur) => {
       // Group events by pet ID and only store the latest event by comparing the block number.
@@ -257,6 +257,7 @@ export default function AdoptionHistory(props) {
         />
       </Tooltip>
       <Table
+        data-testid="adoptionTable"
         loading={isLoading}
         bordered
         className="adoption-history"

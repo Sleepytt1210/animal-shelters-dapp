@@ -150,3 +150,41 @@ export const btoa = (str) => {
 export const objectIsEmpty = (obj) => {
   return obj && Object.keys(obj).length === 0;
 };
+
+export const dynamicToFixed = (float, maxDecimal) => {
+  if (float <= 0) return float;
+  let acc = maxDecimal;
+  let res = float.toFixed(acc);
+  while (res == 0 && acc > 1) {
+    res = float.toFixed(acc--);
+  }
+  return res;
+};
+
+export const mockData = {
+  fname: "Dylon",
+  lname: "Wong",
+  age: 21,
+  address: {
+    street1: "Newcastle 1",
+    street2: "Blandford Square",
+    city: "Newcastle upon Tyne",
+    region: "United Kingdom",
+    code: "NE1 4HZ",
+  },
+  email: "C.Y.D.Wong2@ncl.ac.uk",
+  phone: "07123456789",
+  houseType: "Flat",
+  hasFence: true,
+  fenceHeight: 2,
+  hasOtherPets: true,
+  numberOfPets: 2,
+  friendliness: 5,
+  petConfine:
+    "They will be staying in the courtyard or in the house. I have a pet CCTV at home to monitor their behaviours.",
+  aloneHours: 8,
+  explanation:
+    "I love this pet, she looks very friendly and she can have fun with my other pets. They will be good friends! I also want to help out to improve the animal's wellbeing.",
+  agreement: true,
+  infoCorrect: true,
+};

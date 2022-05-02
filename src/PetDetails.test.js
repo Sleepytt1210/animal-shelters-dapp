@@ -48,7 +48,7 @@ describe("Pet details component tests", () => {
 
   // Details order: Name, Age, Gender, Type, Breed, Vaccinated, Descriptions, Suggestion
   test.each(_petsMetadata)(
-    "Pet details show correct details for $petID: $petName (Adoption state: $adoptable)",
+    "Pet details show correct details for $petID: $name (Adoption state: $adoptable)",
     async ({
       petID,
       name,

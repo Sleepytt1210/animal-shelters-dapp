@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Row, Typography } from "antd";
+import React, { useEffect, useState } from "react";
+import { Typography } from "antd";
 import SearchForm from "./Filter";
 import { generateBreedFromData, ageRangeOptions } from "../../utils/util";
 import PetList from "../PetLists";
@@ -8,7 +8,6 @@ import { useGetAdoptablePets } from "../../hooks/useGetAdoptablePets";
 const { Title } = Typography;
 
 export default function PetFinder(props) {
-  const pets = props.petsMetadata;
   const { adoptablePets, isLoading } = useGetAdoptablePets(props);
   const [filterResult, setFilterResult] = useState([]);
   const [breedlist, setBreedlist] = useState([]);

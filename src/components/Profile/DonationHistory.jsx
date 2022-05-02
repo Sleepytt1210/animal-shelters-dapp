@@ -2,13 +2,14 @@ import { Table, Button, Tooltip } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import React, { useState, useEffect, useCallback } from "react";
 import { useMoralis } from "react-moralis";
-import { tokenEnum } from "../../utils/util";
+import { dynamicToFixed, tokenEnum } from "../../utils/util";
 import { getEllipsisTxt, tokenValue } from "../../helpers/formatters";
+import { useGetDonation } from "../../hooks/useGetDonation";
 
-export default function DonationHistory({ donationEvents, ...props }) {
+export default function DonationHistory(props) {
   const { isAuthenticated, account } = useMoralis();
+  const { donationEvents, isLoading, getPastDonations } = useGetDonation(props);
   const [history, setHistory] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   const columns = [
     {
@@ -26,8 +27,9 @@ export default function DonationHistory({ donationEvents, ...props }) {
       dataIndex: "amount",
       key: "amount",
       render: (text, record) => {
-        if (record.currency == "ETH") return tokenValue(text, 18);
-        else return tokenValue(text, 9);
+        if (record.currency == "ETH")
+          return dynamicToFixed(tokenValue(text, 18), 4);
+        else return tokenValue(text, 9).toFixed(2);
       },
     },
     {
@@ -48,11 +50,13 @@ export default function DonationHistory({ donationEvents, ...props }) {
   ];
 
   const getEvents = useCallback(async () => {
-    setIsLoading(true);
+    console.log("Get Events callback called", donationEvents);
+    console.log("Account:", account);
     const filteredEvents = donationEvents.filter(
-      (e) => e.returnValues.donor.toLowerCase() == account
+      (e) => e.returnValues.donor.toLowerCase() == account.toLowerCase()
     );
 
+    console.log("Filtered events", filteredEvents);
     // Return data needed for table columns
     const formattedData = await Promise.all(
       filteredEvents.map(async (event) => {
@@ -71,8 +75,8 @@ export default function DonationHistory({ donationEvents, ...props }) {
         };
       })
     );
+    console.log("Formatted event", formattedData);
     setHistory(formattedData);
-    setIsLoading(false);
   }, [account, donationEvents, props.web3]);
 
   useEffect(() => {
@@ -100,11 +104,12 @@ export default function DonationHistory({ donationEvents, ...props }) {
         <Button
           shape="circle"
           icon={<SyncOutlined />}
-          onClick={getEvents}
+          onClick={getPastDonations}
           style={{ marginBottom: "16px" }}
         />
       </Tooltip>
       <Table
+        data-testid="donationTable"
         loading={isLoading}
         bordered
         className="adoption-history"

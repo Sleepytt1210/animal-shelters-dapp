@@ -33,8 +33,8 @@ const mockApprove = (address, amount) => Promise.resolve();
 
 global.setImmediate = jest.useRealTimers;
 global.ResizeObserver = require("resize-observer-polyfill");
-global.APP_ID = process.env.REACT_APP_MORALIS_APPLICATION_ID;
-global.SERVER_URL = process.env.REACT_APP_MORALIS_SERVER_URL;
+global.APP_ID = process.env.REACT_APP_MORALIS_TEST_APPLICATION_ID;
+global.SERVER_URL = process.env.REACT_APP_MORALIS_TEST_SERVER_URL;
 global.props = {
   web3: jest.fn(),
   account: "0xc567d23F6b8d3ABBBE9c33Ad7C02651F30C0F99E",
@@ -76,8 +76,8 @@ global.routedApp = (initialPage, appProps) => {
   return render(
     <MoralisProvider
       initializeOnMount={false}
-      appId={process.env.REACT_APP_MORALIS_APPLICATION_ID}
-      serverUrl={process.env.REACT_APP_MORALIS_SERVER_URL}
+      appId={process.env.REACT_APP_MORALIS_TEST_APPLICATION_ID}
+      serverUrl={process.env.REACT_APP_MORALIS_TEST_SERVER_URL}
     >
       <MemoryRouter initialEntries={[initialPage]}>
         <App {...appProps} />

@@ -27,8 +27,6 @@ export default function UserProfile(props) {
   const [newUsername, setNewUsername] = useState("");
   const [nameIsUsed, setNameIsUsed] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const { userSNOWDonation, userETHDonation, donationEvents } =
-    useGetDonation(props);
   const { data } = useMoralisQuery(
     "User",
     (query) => {
@@ -52,13 +50,19 @@ export default function UserProfile(props) {
 
   useEffect(() => {
     if (isAuthenticated && account) setAddress(account);
-    setIsOwner(props.owner && address?.toLowerCase() == props.owner);
     setUsername(
       isAuthenticated && account && user
         ? user.get("username")
         : "Please login first!"
     );
-  }, [account, isAuthenticated, user, address, props, isOwner]);
+  }, [account, isAuthenticated, user, props, isOwner]);
+
+  useEffect(() => {
+    if (props.owner.length > 0 && address.length > 0)
+      setIsOwner(
+        props.owner && address?.toLowerCase() == props.owner.toLowerCase()
+      );
+  }, [address, props.owner]);
 
   useEffect(() => {
     if (data.length > 0) {
@@ -127,14 +131,10 @@ export default function UserProfile(props) {
           <div className="tab">
             <Tabs defaultActiveKey="1" centered>
               <TabPane tab="Wallet" key="1">
-                <WalletDescriptions
-                  {...props}
-                  totalETHDonation={userETHDonation}
-                  totalSNOWDonation={userSNOWDonation}
-                />
+                <WalletDescriptions {...props} />
               </TabPane>
               <TabPane tab="Donation" key="2">
-                <DonationHistory {...props} donationEvents={donationEvents} />
+                <DonationHistory {...props} />
               </TabPane>
               <TabPane tab="Adoption" key="3">
                 <AdoptionHistory {...props} isOwner={isOwner} />

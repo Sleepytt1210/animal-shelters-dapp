@@ -52,6 +52,7 @@ export default function FormReview(props) {
       style={{ width: "80%", display: props.visible ? "block" : "none" }}
     >
       <Modal
+        data-testid="reviewForm"
         visible={props.visible}
         onOk={() => props.setIsModalVisible(false)}
         onCancel={() => props.setIsModalVisible(false)}
@@ -155,7 +156,7 @@ export default function FormReview(props) {
           <Descriptions.Item label="Friendliness">
             {details.friendliness || 0}
           </Descriptions.Item>
-          <Descriptions.Item label="Friendliness" span={3}>
+          <Descriptions.Item label="Pet confinement" span={3}>
             {details.petConfine}
           </Descriptions.Item>
           <Descriptions.Item label="House spent alone" span={3}>
