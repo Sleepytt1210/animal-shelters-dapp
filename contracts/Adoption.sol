@@ -57,8 +57,6 @@ contract Adoption is Ownable, Pet {
      *
      */
     constructor(address snowAdd) {
-        SNOW = ShelterNOW(snowAdd);
-        _decimals = SNOW.decimals();
 
         /// An adoption fee to be paid upon confirmation, defaults to 10000 SNOW (without decimals) gross amount.
         /// 4% of the adoption fee will be taxed.
@@ -66,6 +64,9 @@ contract Adoption is Ownable, Pet {
 
         // A refund fee for a unsuccessful adoption, defaults to 2000 SNOW gross amount.
         _penaltyRefundFee = _normaliseSNOW(2 * 10**3);
+
+        SNOW = ShelterNOW(snowAdd);
+        _decimals = SNOW.decimals();
     }
 
     /**
