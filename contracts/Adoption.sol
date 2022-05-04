@@ -57,7 +57,6 @@ contract Adoption is Ownable, Pet {
      *
      */
     constructor(address snowAdd) {
-
         /// An adoption fee to be paid upon confirmation, defaults to 10000 SNOW (without decimals) gross amount.
         /// 4% of the adoption fee will be taxed.
         _adoptionFee = _normaliseSNOW(1 * 10**4);
@@ -361,6 +360,38 @@ contract Adoption is Ownable, Pet {
         );
         _petToAdoptionState[petID] = AdoptionState.ADOPTABLE;
         emit AdoptionStatus(owner(), petID, AdoptionState.ADOPTABLE);
+    }
+
+    /**
+     * @dev Set a pet to be not adoptable from an adoptable state. Only owner can call this function.
+     *
+     * @param petID: The pet ID.
+     *
+     */
+    function setPetNotAdoptable(uint256 petID, AdoptionState reason)
+        public
+        petIDIsValid(petID)
+        onlyOwner
+    {
+        require(
+            _petToAdoptionState[petID] != AdoptionState.NOTAVAIL &&
+                _petToAdoptionState[petID] != AdoptionState.ADOPTED,
+            "The pet is already not adoptable!"
+        );
+        require(
+            reason == AdoptionState.REMOVED ||
+                reason == AdoptionState.EUTHANISED,
+            "The state should be a removal state!"
+        );
+
+        _resetAdoption(
+            _tempAdopters[petID],
+            petID,
+            AdoptionState.NOTAVAIL,
+            reason
+        );
+
+        emit AdoptionStatus(owner(), petID, reason);
     }
 
     /**
