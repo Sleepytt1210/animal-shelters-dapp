@@ -58,9 +58,9 @@ contract Donation is Ownable {
 
         if (_donorIsNew(donor)) donors.push(donor);
         if (bytes(message).length == 0) message = "None";
+        emit Donate(donor, Token.SNOW, amount, message);
 
         SNOW.transferFrom(donor, owner(), amount);
-        emit Donate(donor, Token.SNOW, amount, message);
     }
 
     /**
@@ -78,9 +78,9 @@ contract Donation is Ownable {
 
         if (_donorIsNew(donor)) donors.push(donor);
         if (bytes(message).length == 0) message = "None";
-        payable(owner()).transfer(amount);
-
         emit Donate(donor, Token.ETH, amount, message);
+
+        payable(owner()).transfer(amount);
     }
 
     /**
@@ -132,9 +132,9 @@ contract Donation is Ownable {
             "Nothing to be withdrawn from the smart contract!"
         );
 
-        payable(owner()).transfer(contractBalance);
-
         emit Withdraw(Token.ETH, contractBalance);
+
+        payable(owner()).transfer(contractBalance);
     }
 
     /**
@@ -146,9 +146,10 @@ contract Donation is Ownable {
             contractBalance > 0,
             "No SNOW to be collected from this contract!"
         );
-        SNOW.transfer(owner(), contractBalance);
 
         emit Withdraw(Token.SNOW, contractBalance);
+
+        SNOW.transfer(owner(), contractBalance);
     }
 
     /**
