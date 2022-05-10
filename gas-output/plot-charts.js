@@ -5,10 +5,31 @@ const path = require("path");
 let actualRes;
 let token;
 const tokens = ["ETH", "BNB", "MATIC"];
+const colorMaps = {
+  2: ["#0071a5", "#ff1818"],
+  3: ["#05469f", "#df3381", "#ff9400"],
+  6: ["#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600"],
+};
 const sliced = process.argv.slice(2);
 const inputIdx = sliced.indexOf("--token");
 const isCost = sliced.includes("--cost");
-if (inputIdx < 0 || !isCost) {
+const isGrouped = sliced.includes("--grouped");
+const scales = {
+  y: {
+    position: "left",
+    ticks: {
+      beginAtZero: true,
+    },
+    title: {
+      display: true,
+      text: isCost ? "Average Transaction Cost (USD)" : "Average Gas Used",
+      font: {
+        size: 14,
+      },
+    },
+  },
+};
+if (inputIdx < 0) {
   const { result } = require("./gas-report");
   actualRes = [result];
 } else {
@@ -36,21 +57,6 @@ if (inputIdx < 0 || !isCost) {
 
 async function plot(res) {
   const { config, methods, deployments } = res;
-  const scales = {
-    y: {
-      position: "left",
-      ticks: {
-        beginAtZero: true,
-      },
-      title: {
-        display: true,
-        text: isCost ? "Average Transaction Cost (USD)" : "Average Gas Used",
-        font: {
-          size: 14,
-        },
-      },
-    },
-  };
   const formatDataset = (contract, dataObject, isDeployment) => {
     const title =
       !contract && isDeployment
@@ -65,12 +71,6 @@ async function plot(res) {
     );
     const data = dataObject.map((obj) => (isCost ? obj.avgPrice : obj.Avg));
     return { title, labels, data };
-  };
-
-  const colorMaps = {
-    2: ["#0071a5", "#ff1818"],
-    3: ["#05469f", "#df3381", "#ff9400"],
-    6: ["#003f5c", "#444e86", "#955196", "#dd5182", "#ff6e54", "#ffa600"],
   };
 
   const datasetGen = (data) => {
@@ -100,9 +100,40 @@ async function plot(res) {
 
   const allConfigs = [deploymentsConfig, ...methodsConfigs];
 
-  for (const config of allConfigs) {
-    await chart.render(config);
-  }
+  if (!isGrouped)
+    for (const config of allConfigs) {
+      await chart.render(config);
+    }
+  return allConfigs;
 }
 
-actualRes.map(plot);
+async function groupedPlot() {
+  const tokensConf = await Promise.all(actualRes.map(plot));
+  const cmap = colorMaps[tokensConf.length];
+  const contractsNames = Object.keys(actualRes[0].methods);
+  const title = (contract) =>
+    `Comparison of Average Transaction Cost in USD by Token in ${contract}.sol`;
+  const groupedByToken = (acc, configs, i) => {
+    const contracts = configs.slice(1);
+    if (i == 0) acc = contracts;
+    contracts.forEach((contract, j) => {
+      const dataset = contract.data.datasets[0];
+      dataset.backgroundColor = cmap[i];
+      dataset.label = actualRes[i].config.token;
+      if (i == 0) acc[j].data.datasets[0] = dataset;
+      else acc[j].data.datasets.push(dataset);
+    });
+    acc[i].options.plugins.title = title(contractsNames[i]);
+    return acc;
+  };
+  const grouped = tokensConf.reduce(groupedByToken, [{}, {}, {}]);
+  grouped.forEach((conf, idx) =>
+    chart.render(
+      conf,
+      `grouped-avg-tcost-comparison-by-token-${contractsNames[idx]}`
+    )
+  );
+}
+
+if (isGrouped) groupedPlot();
+else actualRes.map(plot);

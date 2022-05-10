@@ -8,7 +8,7 @@ const run = () => {
   const port = isTest ? 8545 : isJest ? 7646 : 7545;
   const mnemonic = isTest ? [] : ["-m", `"${process.env.GANACHE_MNEMONIC}"`];
   try {
-    spawn("ganache-cli", ["-i", "1337", "--port", port].concat(mnemonic), {
+    spawn("ganache", ["-i", "1337", "--port", port].concat(mnemonic), {
       shell: true,
       stdio: "inherit",
     });

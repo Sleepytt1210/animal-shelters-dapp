@@ -10,15 +10,15 @@ const canvasRenderService = new ChartJSNodeCanvas({
 });
 
 module.exports = {
-  render: async (config) => {
+  render: async (config, title) => {
     const imageBuffer = await canvasRenderService.renderToBuffer(config);
 
-    const title = config.options.plugins.title.text;
+    const finalTitle = title || config.options.plugins.title.text;
     // Write image to file
     fs.writeFileSync(
       __dirname +
         "\\plot\\" +
-        title
+        finalTitle
           .toLowerCase()
           .replaceAll(" ", "-")
           .replaceAll(":", "")
