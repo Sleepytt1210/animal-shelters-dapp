@@ -27,6 +27,7 @@ import { CROptions } from "./AddressOption";
 import { useRequestAdoption } from "../../hooks/useRequestAdoption";
 import { useMoralis, useNewMoralisObject } from "react-moralis";
 import SuccessModal from "../SuccessModal";
+import { BNTokenValue } from "../../helpers/formatters";
 
 const { Title, Text } = Typography;
 
@@ -129,24 +130,22 @@ export default function AdoptionForm(props) {
       const pet = pets[cleanPetID];
       console.log(pet);
       setPetmetadata(pet);
-      // form.setFieldsValue({
-      //   petName: pet.name,
-      //   petBreed: pet.breed,
-      //   petType: pet.type,
-      // });
       setIsLoading(false);
     }
-
-    if (adoption && adoptionFee === 0) {
-      adoption.getAdoptionFee({ from: props.account }).then((fee) => {
-        setAdoptionFee(fee);
-      });
-    }
-  }, [props.account, isInt, pets, petMetadata, petID, adoption, adoptionFee]);
+  }, [props.account, isInt, pets, petMetadata, petID, adoption]);
 
   useEffect(() => {
     initPet();
   }, [pets, petMetadata, petID, initPet]);
+
+  useEffect(() => {
+    if (adoption && adoptionFee == 0) {
+      adoption.getAdoptionFee({ from: props.account }).then((fee) => {
+        console.log("Adoption fee is", fee.toString());
+        setAdoptionFee(fee);
+      });
+    }
+  }, [props.account, adoption, adoptionFee]);
 
   const confirm = () => {
     requestAdoption();
@@ -576,7 +575,7 @@ export default function AdoptionForm(props) {
             </Checkbox>
           </Form.Item>
           <Divider>{`Note: You will need to pay a deposit fee of ${
-            adoptionFee && adoptionFee.div(SNOWDecimal)
+            adoptionFee && BNTokenValue(adoptionFee, SNOWDecimal)
           } SNOW.`}</Divider>
 
           <Form.Item style={{ justifyContent: "center", textAlign: "center" }}>

@@ -11,7 +11,6 @@ import { useMoralis, useMoralisQuery } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import Blockie from "../Blockie";
 import React, { useState, useEffect } from "react";
-import { useGetDonation } from "../../hooks/useGetDonation";
 import WalletDescriptions from "./WalletDescriptions";
 import AdoptionHistory from "./AdoptionHistory";
 import Approval from "./Approval";
@@ -25,18 +24,7 @@ export default function UserProfile(props) {
   const [address, setAddress] = useState("");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState("");
-  const [nameIsUsed, setNameIsUsed] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const { data } = useMoralisQuery(
-    "User",
-    (query) => {
-      return newUsername || newUsername.length > 0
-        ? query.equalTo("username", newUsername).find()
-        : [];
-    },
-    [newUsername]
-  );
-
   useEffect(() => {
     if (isAuthenticated && address && account != address) {
       logout().then(() => {
@@ -65,26 +53,16 @@ export default function UserProfile(props) {
   }, [address, props.owner]);
 
   useEffect(() => {
-    if (data.length > 0) {
-      setNameIsUsed(true);
-    } else {
-      setNameIsUsed(false);
-    }
-  }, [data]);
-
-  useEffect(() => {
     if (newUsername.length == 0 || newUsername === username) return;
-    if (nameIsUsed) {
-      console.log("Data", data);
-      message.error("Username has been taken!");
-      return;
-    }
     console.log("New username", newUsername);
-    setUserData({ username: newUsername });
-    setUsername(newUsername);
-    message.success(`Successfully changed username to ${newUsername}!`);
-    setNewUsername("");
-  }, [data, nameIsUsed, newUsername, username, setUserData]);
+    setUserData({ username: newUsername })
+      .then(() => {
+        setUsername(newUsername);
+        message.success(`Successfully changed username to ${newUsername}!`);
+        setNewUsername("");
+      })
+      .catch((error) => message.error(error));
+  }, [newUsername, username, setUserData]);
 
   const editOptions = {
     onChange: setNewUsername,

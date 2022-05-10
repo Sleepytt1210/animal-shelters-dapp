@@ -2,7 +2,7 @@ import { Row, Col, Statistic } from "antd";
 import React, { useEffect, useState } from "react";
 import { useSNOWBalance } from "../../hooks/useSNOWBalance";
 import { BNTokenValue, tokenValue } from "../../helpers/formatters";
-import { BN, SNOWDecimal } from "../../utils/util";
+import { BN, dynamicToFixed, SNOWDecimal } from "../../utils/util";
 import { useGetDonation } from "../../hooks/useGetDonation";
 
 export default function WalletDescriptions(props) {
@@ -45,7 +45,9 @@ export default function WalletDescriptions(props) {
           <Statistic
             title="Total ETH Donated"
             value={
-              (userETHDonation && BNTokenValue(userETHDonation, BN(1e18))) || 0
+              (userETHDonation &&
+                dynamicToFixed(tokenValue(userETHDonation, 18), 4)) ||
+              0
             }
           />
         </Col>

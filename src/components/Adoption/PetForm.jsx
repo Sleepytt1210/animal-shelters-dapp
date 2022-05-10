@@ -62,9 +62,9 @@ function BatchForm({ onBatchFinish, ...props }) {
   const [loading, setLoading] = useState(false);
   const [JSONFile, setJSONFile] = useState([]);
   const [thumbnails, setThumbnails] = useState([]);
+  const imgStyle = { height: "150px", width: "150px" };
 
   const normJSONFile = (info) => {
-    console.log(info.file.originFileObj);
     if (info.file.status == "done") {
       getText(info.file.originFileObj, (text) => {
         const _pets = JSON.parse(text);
@@ -94,39 +94,34 @@ function BatchForm({ onBatchFinish, ...props }) {
       setLoading(true);
       return;
     }
+
     return e && e.fileList;
   };
 
   const beforeUploadJSON = (file) => {
-    if (file.type !== "application/json") return false;
+    return file.type == "application/json";
   };
 
   const generateUploader = (i) => {
     return (
-      <Form.Item
-        name={["thumbnail", i]}
-        valuePropName="fileList"
-        getValueFromEvent={normFiles}
-        required
+      <Upload
+        accept="image/jpeg,image/png"
+        listType="picture"
+        customRequest={props.dummyRequest}
+        showUploadList={{
+          showPreviewIcon: false,
+          showDownloadIcon: false,
+          showRemoveIcon: false,
+        }}
+        onChange={(e) => normFiles(e, i)}
+        maxCount={1}
+        style={imgStyle}
       >
-        <Upload
-          accept="image/jpeg,image/png"
-          listType="picture"
-          customRequest={props.dummyRequest}
-          showUploadList={{
-            showPreviewIcon: false,
-            showDownloadIcon: false,
-          }}
-          onChange={(e) => normFiles(e, i)}
-          maxCount={1}
-          style={{ height: "150px", width: "150px" }}
-        >
-          <Button>
-            {loading ? <LoadingOutlined /> : <UploadOutlined />}
-            Upload Thumbnail
-          </Button>
-        </Upload>
-      </Form.Item>
+        <Button>
+          {loading ? <LoadingOutlined /> : <UploadOutlined />}
+          Upload Thumbnail
+        </Button>
+      </Upload>
     );
   };
 
@@ -167,10 +162,14 @@ function BatchForm({ onBatchFinish, ...props }) {
             accept=".json"
             name="json"
             customRequest={props.dummyRequest}
+            action=""
             listType="text"
             maxCount={1}
             beforeUpload={beforeUploadJSON}
-            onRemove={() => setJSONFile([])}
+            onRemove={() => {
+              setJSONFile([]);
+              setThumbnails([]);
+            }}
           >
             <Button icon={<UploadOutlined />}>Click to upload</Button>
           </Upload>
@@ -440,6 +439,7 @@ function SingleForm({ onFinish, petsMetadata, ...props }) {
               listType="picture"
               accept="image/jpeg,image/png"
               customRequest={props.dummyRequest}
+              action=""
               beforeUpload={beforeUpload}
               onChange={normFile}
               maxCount={1}
@@ -466,7 +466,11 @@ function SingleForm({ onFinish, petsMetadata, ...props }) {
               width="100%"
               className="preview-modal"
             >
-              <PetTemplate petMetadata={form.getFieldsValue()} isPreview />
+              <PetTemplate
+                petMetadata={form.getFieldsValue()}
+                isLoading={false}
+                isPreview
+              />
             </Modal>
             <Button
               type="primary"
@@ -490,8 +494,10 @@ export default function PetForm(props) {
   const { uploadImage, uploadFile } = useIPFS();
   const { addPet, petCount } = useAddPet(props);
 
-  const dummyRequest = ({ onSuccess }) => {
-    onSuccess("Ok");
+  const dummyRequest = ({ file, onSuccess }) => {
+    setTimeout(() => {
+      onSuccess("OK");
+    }, 0);
   };
 
   const onFinish = async (values, _petID) => {
