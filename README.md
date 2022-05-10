@@ -23,7 +23,7 @@ You may also see any lint errors in the console.
 4. `npm run truffle:test-gas` - To generate a gas consumption report for each smart contract.
 
 ### Gas Analysis
-To generate gas usage report of each smart contract, the **eth-gas-reporter** package is used. The gas used are based on the smart conract tests and the raw report is output as [gasReporterOutput.json](gasReporterOutput.json) at the root directory.
+To generate a gas consumption report of each smart contract, the **[eth-gas-reporter](https://github.com/cgewecke/eth-gas-reporter)** package is used. The gas used are based on the smart conract gas tests and the raw report is output as [gasReporterOutput.json](gasReporterOutput.json) at the root directory.
 
 Generate formatted gas report: *[ETH Example](./gas-output/formatted-gas-output-token-ETH.json)*.
 ```
