@@ -25,7 +25,7 @@ contract Adoption is Ownable, Pet {
     uint256 private _penaltyRefundFee;
 
     // SNOW decimals;
-    uint8 private _decimals;
+    uint8 private _decimals = 9;
 
     // The contract address to the SNOW.
     ShelterNOW public SNOW;
@@ -65,7 +65,6 @@ contract Adoption is Ownable, Pet {
         _penaltyRefundFee = _normaliseSNOW(2 * 10**3);
 
         SNOW = ShelterNOW(snowAdd);
-        _decimals = SNOW.decimals();
     }
 
     /**
