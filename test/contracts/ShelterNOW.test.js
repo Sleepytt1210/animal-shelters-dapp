@@ -11,8 +11,8 @@ contract("ShelterNOW Contract Unit Test and Integration Test", (accounts) => {
   const account1 = accounts[0];
   const account2 = accounts[1];
 
-  before(async () => {
-    snow = await ShelterNOW.deployed();
+  beforeEach(async () => {
+    snow = await ShelterNOW.new();
   });
 
   describe("Testing normal ShelterNOW operations", () => {
@@ -127,25 +127,28 @@ contract("ShelterNOW Contract Unit Test and Integration Test", (accounts) => {
     });
   });
 
-  /** REVERTS CHECK **/
+  /** REVERT CHECKS **/
+  describe("Revert checks for ShelterNOW Contract", () => {
+    it("should revert on insufficient balance", async () => {
+      const account2Balance = await snow.balanceOf(account2);
+      truffleAssert.fails(
+        snow.transfer(account1, account2Balance.addn(1), { from: account2 }),
+        truffleAssert.ErrorType.REVERT,
+        "transfer amount exceeds balance",
+        "ShelterNOW transfer incorrectly passes with insufficient balance"
+      );
+    });
 
-  it("should revert on insufficient balance", async () => {
-    const account2Balance = await snow.balanceOf(account2);
-    truffleAssert.fails(
-      snow.transfer(account1, account2Balance.addn(1), { from: account2 }),
-      truffleAssert.ErrorType.REVERT,
-      "transfer amount exceeds balance",
-      "ShelterNOW transfer incorrectly passes with insufficient balance"
-    );
-  });
-
-  it("should revert on insufficient allowance", async () => {
-    const transferAmount = "15000000000000";
-    truffleAssert.fails(
-      snow.transferFrom(account1, account2, transferAmount, { from: account2 }),
-      truffleAssert.ErrorType.REVERT,
-      "insufficient allowance",
-      "ShelterNOW transfer incorrectly passes with insufficient allowance"
-    );
+    it("should revert on insufficient allowance", async () => {
+      const transferAmount = "15000000000000";
+      truffleAssert.fails(
+        snow.transferFrom(account1, account2, transferAmount, {
+          from: account2,
+        }),
+        truffleAssert.ErrorType.REVERT,
+        "insufficient allowance",
+        "ShelterNOW transfer incorrectly passes with insufficient allowance"
+      );
+    });
   });
 });

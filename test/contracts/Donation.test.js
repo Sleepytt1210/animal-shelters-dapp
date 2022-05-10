@@ -15,9 +15,9 @@ contract("Donation Contract Unit Test and Integration Test", (accounts) => {
   let snow;
   let donation;
 
-  before(async () => {
-    snow = await ShelterNOW.deployed();
-    donation = await Donation.deployed();
+  beforeEach(async () => {
+    snow = await ShelterNOW.new();
+    donation = await Donation.new(snow.address);
     const acc2Bal = await snow.balanceOf(account2);
 
     // Initialise account 2 with some funds.
@@ -173,36 +173,37 @@ contract("Donation Contract Unit Test and Integration Test", (accounts) => {
     });
   });
 
-  /** REVERTS CHECK **/
+  /** REVERT CHECKS **/
+  describe("Revert Checks for Donation Contract", () => {
+    it("should revert on 0 amount donation", async () => {
+      const message = "Good luck";
+      await truffleAssert.fails(
+        donation.donateETH(message, { from: account2, value: "0" }),
+        truffleAssert.ErrorType.REVERT,
+        "cannot be zero",
+        "ETH donation incorrectly passed with amount 0"
+      );
 
-  it("should revert on 0 amount donation", async () => {
-    const message = "Good luck";
-    await truffleAssert.fails(
-      donation.donateETH(message, { from: account2, value: "0" }),
-      truffleAssert.ErrorType.REVERT,
-      "cannot be zero",
-      "ETH donation incorrectly passed with amount 0"
-    );
+      await truffleAssert.fails(
+        donation.donateSNOW("0", message, { from: account2 }),
+        truffleAssert.ErrorType.REVERT,
+        "cannot be zero",
+        "SNOW donation incorrectly passed with amount 0"
+      );
+    });
 
-    await truffleAssert.fails(
-      donation.donateSNOW("0", message, { from: account2 }),
-      truffleAssert.ErrorType.REVERT,
-      "cannot be zero",
-      "SNOW donation incorrectly passed with amount 0"
-    );
-  });
+    it("should revert on insufficient allowance", async () => {
+      const message = "Good luck";
+      const donateAmount = SNOWdenomination(50000);
 
-  it("should revert on insufficient allowance", async () => {
-    const message = "Good luck";
-    const donateAmount = SNOWdenomination(50000);
+      await snow.approve(donation.address, donateAmount.subn(1));
 
-    await snow.approve(donation.address, donateAmount.subn(1));
-
-    await truffleAssert.fails(
-      donation.donateSNOW(donateAmount, message, { from: account2 }),
-      truffleAssert.ErrorType.REVERT,
-      "insufficient allowance",
-      "SNOW donation incorrectly passed with insufficient allowance"
-    );
+      await truffleAssert.fails(
+        donation.donateSNOW(donateAmount, message, { from: account2 }),
+        truffleAssert.ErrorType.REVERT,
+        "insufficient allowance",
+        "SNOW donation incorrectly passed with insufficient allowance"
+      );
+    });
   });
 });
