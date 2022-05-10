@@ -25,7 +25,7 @@ You may also see any lint errors in the console.
 ### Gas Analysis
 To generate gas usage report of each smart contract, the **eth-gas-reporter** package is used. The gas used are based on the smart conract tests and the raw report is output as [gasReporterOutput.json](gasReporterOutput.json) at the root directory.
 
-Generate formatted gas report: *[ETH Example](./../gas-output/formatted-gas-output-token-ETH.json)*.
+Generate formatted gas report: *[ETH Example](./gas-output/formatted-gas-output-token-ETH.json)*.
 ```
 npm run gasreport
 ```
