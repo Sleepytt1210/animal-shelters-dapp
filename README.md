@@ -64,7 +64,7 @@ GANACHE_MNEMONIC="MNEMONIC_HERE"
 COINMARKETCAP_API_KEY="coinmarketcap_api_for_gas_report"
 ```
 
-### Connecting Local Ganache to Moralis
+### Connecting Local Ganache to Moralis (Optional)
 1.  Download [frpc](https://github.com/fatedier/frp/releases) to build a proxy connection.
 2.  Replace the following content in "frpc.ini", based on your devchain. The configuration can be found in the **Devchain Proxy Server** tab of your moralis server dashboard.
 3.  Run `frpc.exe -c frpc.ini` (Windows) or `./frpc -c frpc.ini` (Linux).
